@@ -18,7 +18,7 @@ typedef struct {
 } TILE_MAP;
 
 // Function declarations
-TILE_MAP init_tilemap(void);
+TILE_MAP init_tilemap();
 void draw_tilemap(const TILE_MAP* map);
 void unload_tilemap(const TILE_MAP* map);
 int get_tile_scale(const TILE_MAP* map);

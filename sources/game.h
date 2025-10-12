@@ -4,11 +4,21 @@
 
 #ifndef PROJEKT_GAME_H
 #define PROJEKT_GAME_H
+#include <stddef.h>
+
 #include "tilemap.h"
 
 #define STARTING_COUNT_OF_GAME_OBJECTS 32
-#define STARTING_AMOUT_OF_MONEY 1000
-#define STARTING_AMOUT_OF_LIVES 100
+#define STARTING_AMOUNT_OF_MONEY 1000
+#define STARTING_AMOUNT_OF_LIVES 100
+
+// Tower default stats for LEVEL_0
+#define TOWER_LEVEL_0_DAMAGE 0.0f
+#define TOWER_LEVEL_0_RANGE 0.0f
+#define TOWER_LEVEL_0_FIRE_COOLDOWN 1000.0f
+#define TOWER_LEVEL_0_WIDTH 4
+#define TOWER_LEVEL_0_HEIGHT 4
+#define TOWER_LEVEL_0_UPGRADE_COST 100
 
 
 typedef enum {
@@ -20,8 +30,16 @@ typedef enum {
 
 typedef enum {
     LEVEL_0,
-    LEVEL_1
+    LEVEL_1,
+    LEVEL_MAX
 } TOWER_LEVEL;
+
+typedef enum {
+    UPGRADE_SUCCESS,
+    UPGRADE_INSUFFICIENT_FUNDS,
+    UPGRADE_MAX_LEVEL,
+    UPGRADE_NOT_FOUND
+} UPGRADE_RESULT;
 
 typedef struct {
     const int* sprites;
@@ -82,8 +100,8 @@ typedef struct {
     TILE_MAP tilemap;
     ASSETS assets;
 
-    int object_count;
-    int object_capacity;
+    size_t object_count;
+    size_t object_capacity;
 
     int player_lives;
     int player_money;
@@ -93,13 +111,13 @@ typedef struct {
 
 GAME init_game();
 void add_game_object(GAME *game,GAME_OBJECT game_object);
-void add_object_size(GAME *game);
+void grow_object_capacity(GAME *game);
 void start_game(GAME *game);
 void unload_game(GAME *game);
-GAME_OBJECT init_tower(const Vector2* position);
+GAME_OBJECT init_tower(Vector2 position);
 GRID_COORD screen_to_grid(Vector2 screen_pos, const TILE_MAP* tilemap);
 int get_game_objects_of_type(const GAME *game, OBJECT_TYPE type, GAME_OBJECT **out_objects);
-bool upgrade_clicked_tower(GAME *game, GRID_COORD grid_coord);
+UPGRADE_RESULT upgrade_clicked_tower(GAME *game, GRID_COORD grid_coord);
 TowerSpriteInfo get_tower_sprites(TOWER_LEVEL level);
 void draw_game_objects(const GAME* game);
 

@@ -4,7 +4,7 @@
 #include <stdlib.h>
 
 // Layer 1 data - base layer
-static const int l_New_Layer_1[MAP_HEIGHT][MAP_WIDTH] = {
+static const int l_new_layer_1[MAP_HEIGHT][MAP_WIDTH] = {
    {355,355,355,355,355,355,355,355,355,355,355,355,355,355,355,355,355,355,355,355,355,355,355,355,355},
    {355,355,355,355,355,355,355,355,355,355,355,355,355,355,355,355,355,355,355,355,355,355,355,355,355},
    {299,299,299,299,299,299,299,299,299,299,299,299,299,299,299,299,299,299,299,249,355,355,355,355,355},
@@ -28,7 +28,7 @@ static const int l_New_Layer_1[MAP_HEIGHT][MAP_WIDTH] = {
 };
 
 // Layer 3 data - top decorative layer
-static const int l_New_Layer_2[MAP_HEIGHT][MAP_WIDTH] = {
+static const int l_new_layer_2[MAP_HEIGHT][MAP_WIDTH] = {
    {0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,43,44,45},
    {0,0,0,0,0,0,0,0,0,147,148,0,0,0,0,0,0,0,0,0,0,0,56,57,58},
    {0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,69,70,71},
@@ -52,7 +52,7 @@ static const int l_New_Layer_2[MAP_HEIGHT][MAP_WIDTH] = {
 };
 
 // Initialize a tilemap with the layer data
-TILE_MAP init_tilemap(void) {
+TILE_MAP init_tilemap() {
     TILE_MAP map;
     map.tile_size = TILE_SIZE;
     map.map_width = MAP_WIDTH;
@@ -72,14 +72,14 @@ TILE_MAP init_tilemap(void) {
     }
 
     // Copy layer data
-    memcpy(map.layer1, l_New_Layer_1, sizeof(l_New_Layer_1));
-    memcpy(map.layer2, l_New_Layer_2, sizeof(l_New_Layer_2));
+    memcpy(map.layer1, l_new_layer_1, sizeof(l_new_layer_1));
+    memcpy(map.layer2, l_new_layer_2, sizeof(l_new_layer_2));
 
     return map;
 }
 
 // Draw a single layer
-void draw_layer(const TILE_MAP* map,const int layer[MAP_HEIGHT][MAP_WIDTH], const Texture2D tileset) {
+void draw_layer(const TILE_MAP* map, const int layer[MAP_HEIGHT][MAP_WIDTH], const Texture2D tileset) {
 
     for (int y = 0; y < map->map_height; y++) {
         for (int x = 0; x < map->map_width; x++) {
@@ -107,7 +107,7 @@ void draw_texture(const TILE_MAP* map, const Texture2D tileset, const int tile_i
 
     const int tiles_per_row_v = tiles_per_row(map,tileset);
     if (tiles_per_row_v == 0) {
-        fprintf(stderr, "ERROR: Failed count tiles pre row\n");
+        fprintf(stderr, "ERROR: Failed to count tiles per row\n");
         return;
     }
 
@@ -147,9 +147,18 @@ int get_tile_scale(const TILE_MAP* map) {
     const int map_pixel_width = map->map_width * map->tile_size;
     const int map_pixel_height = map->map_height * map->tile_size;
 
+    if (map_pixel_width == 0 || map_pixel_height == 0) {
+        fprintf(stderr, "ERROR: Invalid map dimensions for scaling\n");
+        return map->tile_size;
+    }
+
     const int scale_x = screen_width / map_pixel_width;
     const int scale_y = screen_height / map_pixel_height;
     const int scale = scale_x < scale_y ? scale_x : scale_y; // Use smaller scale to fit
+
+    if (scale == 0) {
+        return map->tile_size;
+    }
 
     return map->tile_size * scale;
 }

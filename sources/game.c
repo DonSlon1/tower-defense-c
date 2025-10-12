@@ -12,59 +12,69 @@ GAME init_game() {
     game.game_objects =  malloc(sizeof(GAME_OBJECT) * STARTING_COUNT_OF_GAME_OBJECTS);
     if (game.game_objects == nullptr) {
         fprintf(stderr, "ERROR: Failed to allocate memory for game objects\n");
+        unload_tilemap(&game.tilemap);
         exit(1);
     }
     game.object_capacity = STARTING_COUNT_OF_GAME_OBJECTS;
     game.object_count = 0;
-    game.player_money = STARTING_AMOUT_OF_MONEY;
-    game.player_lives = STARTING_AMOUT_OF_LIVES;
+    game.player_money = STARTING_AMOUNT_OF_MONEY;
+    game.player_lives = STARTING_AMOUNT_OF_LIVES;
     game.next_id = 0;
 
     game.assets.towers = LoadTexture(ASSETS_PATH "images/towers.png");
     if (game.assets.towers.id == 0) {
         fprintf(stderr, "ERROR: Failed to load towers texture\n");
+        free(game.game_objects);
+        unload_tilemap(&game.tilemap);
         exit(1);
     }
 
-    add_game_object(&game,init_tower(&(Vector2){5,3}));
-    add_game_object(&game,init_tower(&(Vector2){8,11}));
-    add_game_object(&game,init_tower(&(Vector2){20,3}));
-    add_game_object(&game,init_tower(&(Vector2){20,11}));
+    add_game_object(&game,init_tower((Vector2){5,3}));
+    add_game_object(&game,init_tower((Vector2){8,11}));
+    add_game_object(&game,init_tower((Vector2){20,3}));
+    add_game_object(&game,init_tower((Vector2){20,11}));
 
 
     return game;
 }
 
-GAME_OBJECT init_tower(const Vector2* position) {
+GAME_OBJECT init_tower(const Vector2 position) {
   return (GAME_OBJECT) {
       .type = TOWER,
-      .position = *position,
+      .position = position,
       .data.tower = {
-          .damage = 0,
-          .range = 0,
-          .fire_cooldown = 1000,
+          .damage = TOWER_LEVEL_0_DAMAGE,
+          .range = TOWER_LEVEL_0_RANGE,
+          .fire_cooldown = TOWER_LEVEL_0_FIRE_COOLDOWN,
           .target_id = -1,
-          .width = 4,
-          .height = 4,
-          .upgrade_cost = 100,
+          .width = TOWER_LEVEL_0_WIDTH,
+          .height = TOWER_LEVEL_0_HEIGHT,
+          .upgrade_cost = TOWER_LEVEL_0_UPGRADE_COST,
           .level = LEVEL_0
       }
   };
 }
 
 
-void add_game_object(GAME *game, const GAME_OBJECT game_object) {
-    if (game->object_count + 1 >= game->object_capacity) {
-        add_object_size(game);
+void add_game_object(GAME *game, GAME_OBJECT game_object) {
+    if (game->object_count == game->object_capacity) {
+        grow_object_capacity(game);
     }
+
+    game_object.id = game->next_id;
     game->game_objects[game->object_count] = game_object;
     game->object_count++;
     game->next_id++;
 }
 
-void add_object_size(GAME* game) {
-    int new_capacity = game->object_capacity * 2;
+void grow_object_capacity(GAME* game) {
+    size_t new_capacity = game->object_capacity * 2;
     if (new_capacity == 0) new_capacity = STARTING_COUNT_OF_GAME_OBJECTS;
+
+    if (new_capacity < game->object_capacity) {
+        fprintf(stderr, "ERROR: Capacity overflow when resizing game objects array.\n");
+        exit(1);
+    }
 
     GAME_OBJECT* temp = realloc(game->game_objects, sizeof(GAME_OBJECT) * new_capacity);
 
@@ -87,9 +97,21 @@ void start_game(GAME *game) {
         const int scaled_tile_size = get_tile_scale(&game->tilemap);
         if (IsMouseButtonPressed(MOUSE_BUTTON_LEFT)) {
             printf("Player clicked on grid cell: (%d, %d)\n", grid_pos.x, grid_pos.y);
-            upgrade_clicked_tower(game,grid_pos);
+            const UPGRADE_RESULT result = upgrade_clicked_tower(game,grid_pos);
 
-
+            switch (result) {
+                case UPGRADE_SUCCESS:
+                    printf("Tower upgraded successfully!\n");
+                    break;
+                case UPGRADE_INSUFFICIENT_FUNDS:
+                    printf("Insufficient funds for upgrade\n");
+                    break;
+                case UPGRADE_MAX_LEVEL:
+                    printf("Tower is already at max level\n");
+                    break;
+                case UPGRADE_NOT_FOUND:
+                    break;
+            }
         }
         BeginDrawing();
         ClearBackground(BLACK);
@@ -123,7 +145,7 @@ void unload_game(GAME *game) {
     printf("GAME: was unloaded\n");
 }
 
-GRID_COORD screen_to_grid(Vector2 screen_pos, const TILE_MAP* tilemap) {
+GRID_COORD screen_to_grid(const Vector2 screen_pos, const TILE_MAP* tilemap) {
     const int scaled_tile_size = get_tile_scale(tilemap);
 
     GRID_COORD grid_pos;
@@ -139,7 +161,7 @@ GRID_COORD screen_to_grid(Vector2 screen_pos, const TILE_MAP* tilemap) {
  */
 int get_game_objects_of_type(const GAME *game, const OBJECT_TYPE type, GAME_OBJECT **out_objects) {
     int count = 0;
-    for (int i = 0; i < game->object_count;i++) {
+    for (size_t i = 0; i < game->object_count;i++) {
         if (game->game_objects[i].type == type) {
             count++;
         }
@@ -157,7 +179,7 @@ int get_game_objects_of_type(const GAME *game, const OBJECT_TYPE type, GAME_OBJE
     }
 
     int current_index = 0;
-    for (int i = 0; i < game->object_count; i++) {
+    for (size_t i = 0; i < game->object_count; i++) {
         if (game->game_objects[i].type == type) {
             (*out_objects)[current_index] = game->game_objects[i];
             current_index++;
@@ -167,18 +189,12 @@ int get_game_objects_of_type(const GAME *game, const OBJECT_TYPE type, GAME_OBJE
     return count;
 }
 
-bool upgrade_clicked_tower(GAME *game, const GRID_COORD grid_coord) {
-
-    int clicked_tower_id = -1;
-    for (int i = 0; i < game->object_count; i++) {
+UPGRADE_RESULT upgrade_clicked_tower(GAME *game, const GRID_COORD grid_coord) {
+    for (size_t i = 0; i < game->object_count; i++) {
         if (game->game_objects[i].type != TOWER) {
             continue;
         }
         GAME_OBJECT* tower = &game->game_objects[i];
-
-        if (tower->data.tower.level != LEVEL_0) {
-            continue;
-        }
 
         const int tower_grid_x = (int)tower->position.x;
         const int tower_grid_y = (int)tower->position.y;
@@ -190,19 +206,21 @@ bool upgrade_clicked_tower(GAME *game, const GRID_COORD grid_coord) {
                                grid_coord.y >= tower_grid_y &&
                                grid_coord.y < tower_grid_y + tower_height;
 
-
         if (is_inside) {
-            if (game->player_money < tower->data.tower.upgrade_cost) {
-                break;
+            if (tower->data.tower.level >= LEVEL_1) {
+                return UPGRADE_MAX_LEVEL;
             }
+
+            if (game->player_money < tower->data.tower.upgrade_cost) {
+                return UPGRADE_INSUFFICIENT_FUNDS;
+            }
+
             tower->data.tower.level++;
             game->player_money -= tower->data.tower.upgrade_cost;
-            clicked_tower_id = tower->id;
-            break;
+            return UPGRADE_SUCCESS;
         }
-
     }
-    return clicked_tower_id != -1;
+    return UPGRADE_NOT_FOUND;
 }
 
 TowerSpriteInfo get_tower_sprites(const TOWER_LEVEL level) {
@@ -234,13 +252,13 @@ TowerSpriteInfo get_tower_sprites(const TOWER_LEVEL level) {
             info.height = 4;
             break;
         default:
-            fprintf(stderr, "WARNING: Failed to found sprite for tower level\n");
+            fprintf(stderr, "WARNING: Failed to find sprite for tower level\n");
     }
     return info;
 }
 
 void draw_game_objects(const GAME* game) {
-    for (int i = 0; i < game->object_count; i++) {
+    for (size_t i = 0; i < game->object_count; i++) {
         const GAME_OBJECT* obj = &game->game_objects[i];
 
         if (obj->type == TOWER) {
