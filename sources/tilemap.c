@@ -1,7 +1,5 @@
 #include "tilemap.h"
-#include <stdlib.h>
 #include <string.h>
-#include <stdio.h>
 
 // Layer 1 data - base layer
 static const int l_New_Layer_1[MAP_HEIGHT][MAP_WIDTH] = {
@@ -27,7 +25,7 @@ static const int l_New_Layer_1[MAP_HEIGHT][MAP_WIDTH] = {
    {355,355,355,355,355,355,355,355,355,355,355,355,355,355,355,355,355,355,355,355,355,355,355,355,355}
 };
 
-// Layer 3 data - decorative layer
+// Layer 2 data - decorative layer
 static const int l_New_Layer_2[MAP_HEIGHT][MAP_WIDTH] = {
    {0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0},
    {0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0},
@@ -51,7 +49,7 @@ static const int l_New_Layer_2[MAP_HEIGHT][MAP_WIDTH] = {
    {0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0}
 };
 
-// Layer 4 data - top decorative layer
+// Layer 3 data - top decorative layer
 static const int l_New_Layer_3[MAP_HEIGHT][MAP_WIDTH] = {
    {0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,43,44,45},
    {0,0,0,0,0,0,0,0,0,147,148,0,0,0,0,0,0,0,0,0,0,0,56,57,58},
@@ -76,11 +74,11 @@ static const int l_New_Layer_3[MAP_HEIGHT][MAP_WIDTH] = {
 };
 
 // Initialize a tilemap with the layer data
-Tilemap InitTilemap(void) {
-    Tilemap map;
-    map.tileSize = TILE_SIZE;
-    map.mapWidth = MAP_WIDTH;
-    map.mapHeight = MAP_HEIGHT;
+TILE_MAP init_tilemap(void) {
+    TILE_MAP map;
+    map.tile_size = TILE_SIZE;
+    map.map_width = MAP_WIDTH;
+    map.map_height = MAP_HEIGHT;
 
     // Load the tileset textures for each layer
     map.tileset1 = LoadTexture(ASSETS_PATH "images/83291578-f8ec-4e3f-2f6a-6a248efa5800.png");
@@ -96,43 +94,37 @@ Tilemap InitTilemap(void) {
 }
 
 // Draw a single layer
-void DrawLayer(const Tilemap* map, int layer[MAP_HEIGHT][MAP_WIDTH], const Texture2D tileset) {
-    // Draw all tiles (no camera culling)
-    int startX = 0;
-    int startY = 0;
-    int endX = map->mapWidth;
-    int endY = map->mapHeight;
+void draw_layer(const TILE_MAP* map, int layer[MAP_HEIGHT][MAP_WIDTH], const Texture2D tileset) {
+    const int scaled_tile_size = get_tile_scale(map);
 
-    // Calculate tiles per row in tileset (using ceiling division like JavaScript)
-    int tilesPerRow = (tileset.width + map->tileSize - 1) / map->tileSize;
+    const int tiles_per_row = (tileset.width + map->tile_size - 1) / map->tile_size;
 
-    // Draw visible tiles
-    for (int y = startY; y < endY; y++) {
-        for (int x = startX; x < endX; x++) {
-            int tileIndex = layer[y][x];
+    for (int y = 0; y < map->map_height; y++) {
+        for (int x = 0; x < map->map_width; x++) {
+            int tile_index = layer[y][x];
 
             // Skip empty tiles (0 means no tile)
-            if (tileIndex == 0) continue;
+            if (tile_index == 0) continue;
 
             // Convert 1-based index to 0-based
-            tileIndex -= 1;
+            tile_index -= 1;
 
             // Calculate source position in tileset
-            int srcX = (tileIndex % tilesPerRow) * map->tileSize;
-            int srcY = (tileIndex / tilesPerRow) * map->tileSize;
+            const int src_x = (tile_index % tiles_per_row) * map->tile_size;
+            const int src_y = (tile_index / tiles_per_row) * map->tile_size;
 
-            Rectangle source = {
-                srcX,
-                srcY,
-                map->tileSize,
-                map->tileSize
+            const Rectangle source = {
+                (float)src_x,
+                (float)src_y,
+                (float)map->tile_size,
+                (float)map->tile_size
             };
 
-            Rectangle dest = {
-                x * map->tileSize,
-                y * map->tileSize,
-                map->tileSize,
-                map->tileSize
+            const Rectangle dest = {
+                (float)(x * scaled_tile_size),
+                (float)(y * scaled_tile_size),
+                (float) scaled_tile_size,
+                (float) scaled_tile_size
             };
 
             DrawTexturePro(tileset, source, dest, (Vector2){0, 0}, 0.0f, WHITE);
@@ -140,16 +132,27 @@ void DrawLayer(const Tilemap* map, int layer[MAP_HEIGHT][MAP_WIDTH], const Textu
     }
 }
 
-// Draw the tilemap (all layers)
-void DrawTilemap(Tilemap* map) {
-    DrawLayer(map, map->layer1, map->tileset1);
-    DrawLayer(map, map->layer3, map->tileset3);
-    DrawLayer(map, map->layer4, map->tileset4);
+void draw_tilemap(TILE_MAP* map) {
+    draw_layer(map, map->layer1, map->tileset1);
+    draw_layer(map, map->layer3, map->tileset3);
+    draw_layer(map, map->layer4, map->tileset4);
 }
 
-// Unload tilemap resources
-void UnloadTilemap(const Tilemap* map) {
+void unload_tilemap(const TILE_MAP* map) {
     UnloadTexture(map->tileset1);
     UnloadTexture(map->tileset3);
     UnloadTexture(map->tileset4);
+}
+int get_tile_scale(const TILE_MAP* map) {
+    const int screen_width = GetScreenWidth();
+    const int screen_height = GetScreenHeight();
+
+    const int map_pixel_width = map->map_width * map->tile_size;
+    const int map_pixel_height = map->map_height * map->tile_size;
+
+    const int scale_x = screen_width / map_pixel_width;
+    const int scale_y = screen_height / map_pixel_height;
+    const int scale = scale_x < scale_y ? scale_x : scale_y; // Use smaller scale to fit
+
+    return map->tile_size * scale;
 }

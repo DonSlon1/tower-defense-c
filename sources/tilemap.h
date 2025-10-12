@@ -14,14 +14,15 @@ typedef struct {
     Texture2D tileset1;  // For layer 1
     Texture2D tileset3;  // For layer 3
     Texture2D tileset4;  // For layer 4
-    int tileSize;
-    int mapWidth;
-    int mapHeight;
-} Tilemap;
+    int tile_size;
+    int map_width;
+    int map_height;
+} TILE_MAP;
 
 // Function declarations
-Tilemap InitTilemap(void);
-void DrawTilemap(Tilemap* map);
-void UnloadTilemap(const Tilemap* map);
+TILE_MAP init_tilemap(void);
+void draw_tilemap(TILE_MAP* map);
+void unload_tilemap(const TILE_MAP* map);
+int get_tile_scale(const TILE_MAP* map);
 
 #endif // TILEMAP_H

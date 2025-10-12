@@ -1,6 +1,6 @@
+#include "game.h"
 #include "raylib.h"
 #include "tilemap.h"
-#include <stdio.h>
 
 #define SCREEN_WIDTH (1024)
 #define SCREEN_HEIGHT (576)
@@ -12,23 +12,10 @@ int main(void)
 {
     InitWindow(SCREEN_WIDTH, SCREEN_HEIGHT, WINDOW_TITLE);
     SetTargetFPS(60);
+    GAME game = init_game();
 
-    // Initialize the tilemap
-    Tilemap map = InitTilemap();
+    start_game(&game);
 
-    while (!WindowShouldClose())
-    {
-        BeginDrawing();
-        ClearBackground(BLACK);
-
-        DrawTilemap(&map);
-
-        DrawFPS(10, 10);
-
-        EndDrawing();
-    }
-
-    UnloadTilemap(&map);
     CloseWindow();
 
     return 0;
