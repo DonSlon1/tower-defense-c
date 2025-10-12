@@ -26,7 +26,7 @@ static const int l_New_Layer_1[MAP_HEIGHT][MAP_WIDTH] = {
 };
 
 // Layer 2 data - decorative layer
-static const int l_New_Layer_2[MAP_HEIGHT][MAP_WIDTH] = {
+static const int l_New_Layer_5[MAP_HEIGHT][MAP_WIDTH] = {
    {0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0},
    {0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0},
    {0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0},
@@ -50,7 +50,7 @@ static const int l_New_Layer_2[MAP_HEIGHT][MAP_WIDTH] = {
 };
 
 // Layer 3 data - top decorative layer
-static const int l_New_Layer_3[MAP_HEIGHT][MAP_WIDTH] = {
+static const int l_New_Layer_2[MAP_HEIGHT][MAP_WIDTH] = {
    {0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,43,44,45},
    {0,0,0,0,0,0,0,0,0,147,148,0,0,0,0,0,0,0,0,0,0,0,56,57,58},
    {0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,69,70,71},
@@ -82,66 +82,68 @@ TILE_MAP init_tilemap(void) {
 
     // Load the tileset textures for each layer
     map.tileset1 = LoadTexture(ASSETS_PATH "images/83291578-f8ec-4e3f-2f6a-6a248efa5800.png");
-    map.tileset3 = LoadTexture(ASSETS_PATH "images/61226b83-964f-466c-c64c-94852f980500.png");
-    map.tileset4 = LoadTexture(ASSETS_PATH "images/bb5eb52a-6c5d-4e83-72e7-a62c7ac8ea00.png");
+    map.tileset2 = LoadTexture(ASSETS_PATH "images/bb5eb52a-6c5d-4e83-72e7-a62c7ac8ea00.png");
 
     // Copy layer data
     memcpy(map.layer1, l_New_Layer_1, sizeof(l_New_Layer_1));
-    memcpy(map.layer3, l_New_Layer_2, sizeof(l_New_Layer_2));
-    memcpy(map.layer4, l_New_Layer_3, sizeof(l_New_Layer_3));
+    memcpy(map.layer2, l_New_Layer_2, sizeof(l_New_Layer_2));
 
     return map;
 }
 
 // Draw a single layer
 void draw_layer(const TILE_MAP* map, int layer[MAP_HEIGHT][MAP_WIDTH], const Texture2D tileset) {
-    const int scaled_tile_size = get_tile_scale(map);
-
-    const int tiles_per_row = (tileset.width + map->tile_size - 1) / map->tile_size;
 
     for (int y = 0; y < map->map_height; y++) {
         for (int x = 0; x < map->map_width; x++) {
             int tile_index = layer[y][x];
 
-            // Skip empty tiles (0 means no tile)
             if (tile_index == 0) continue;
 
-            // Convert 1-based index to 0-based
             tile_index -= 1;
 
-            // Calculate source position in tileset
-            const int src_x = (tile_index % tiles_per_row) * map->tile_size;
-            const int src_y = (tile_index / tiles_per_row) * map->tile_size;
-
-            const Rectangle source = {
-                (float)src_x,
-                (float)src_y,
-                (float)map->tile_size,
-                (float)map->tile_size
-            };
-
-            const Rectangle dest = {
-                (float)(x * scaled_tile_size),
-                (float)(y * scaled_tile_size),
-                (float) scaled_tile_size,
-                (float) scaled_tile_size
-            };
-
-            DrawTexturePro(tileset, source, dest, (Vector2){0, 0}, 0.0f, WHITE);
+            draw_texture(map,tileset,tile_index,x,y);
         }
     }
+}
+int tiles_per_row(const TILE_MAP* map, const Texture2D tileset) {
+    return (tileset.width + map->tile_size - 1) / map->tile_size;
+}
+
+void draw_texture(const TILE_MAP* map, const Texture2D tileset, const int tile_index, const int x, const int y) {
+
+    const int scaled_tile_size = get_tile_scale(map);
+
+    const int tiles_per_row_v = tiles_per_row(map,tileset);
+
+    const int src_x = (tile_index % tiles_per_row_v) * map->tile_size;
+    const int src_y = (tile_index / tiles_per_row_v) * map->tile_size;
+
+    const Rectangle source = {
+        (float)src_x,
+        (float)src_y,
+        (float)map->tile_size,
+        (float)map->tile_size
+    };
+
+    const Rectangle dest = {
+        (float)(x * scaled_tile_size),
+        (float)(y * scaled_tile_size),
+        (float) scaled_tile_size,
+        (float) scaled_tile_size
+    };
+
+    DrawTexturePro(tileset, source, dest, (Vector2){0, 0}, 0.0f, WHITE);
 }
 
 void draw_tilemap(TILE_MAP* map) {
     draw_layer(map, map->layer1, map->tileset1);
-    draw_layer(map, map->layer3, map->tileset3);
-    draw_layer(map, map->layer4, map->tileset4);
+    draw_layer(map, map->layer2, map->tileset2);
 }
 
 void unload_tilemap(const TILE_MAP* map) {
     UnloadTexture(map->tileset1);
-    UnloadTexture(map->tileset3);
-    UnloadTexture(map->tileset4);
+    UnloadTexture(map->tileset2);
 }
 int get_tile_scale(const TILE_MAP* map) {
     const int screen_width = GetScreenWidth();

@@ -16,6 +16,18 @@ typedef enum {
     PROJECTILE
 } OBJECT_TYPE;
 
+typedef enum {
+    LEVEL_0,
+    LEVEL_1
+} TOWER_LEVEL;
+
+typedef struct {
+    const int* sprites;
+    int count;
+    int width;
+    int height;
+} TowerSpriteInfo;
+
 typedef struct {
     int x;
     int y;
@@ -29,7 +41,7 @@ typedef struct {
     int target_id;
     int width;
     int height;
-    int level;
+    TOWER_LEVEL level;
 } TOWER_DATA;
 
 typedef struct {
@@ -58,8 +70,13 @@ typedef struct {
 } GAME_OBJECT;
 
 typedef struct {
+    Texture2D towers;
+} ASSETS;
+
+typedef struct {
     GAME_OBJECT *game_objects;
     TILE_MAP tilemap;
+    ASSETS assets;
 
     int object_count;
     int object_capacity;
@@ -79,5 +96,7 @@ GAME_OBJECT init_tower(Vector2 position, const GAME *game);
 GRID_COORD screen_to_grid(Vector2 screen_pos, const TILE_MAP* tilemap);
 int get_game_objects_of_type(const GAME *game, OBJECT_TYPE type, GAME_OBJECT **out_objects);
 bool upgrade_clicked_tower(GAME *game, GRID_COORD grid_coord);
+const int* get_tower_sprites(TOWER_LEVEL level, int* out_count);
+void draw_game_objects(const GAME* game);
 
 #endif //PROJEKT_GAME_H
