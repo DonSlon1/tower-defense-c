@@ -7,6 +7,8 @@
 #include "tilemap.h"
 
 #define STARTING_COUNT_OF_GAME_OBJECTS 32
+#define STARTING_AMOUT_OF_MONEY 1000
+#define STARTING_AMOUT_OF_LIVES 100
 
 
 typedef enum {
@@ -37,10 +39,12 @@ typedef struct {
 typedef struct {
     float damage;
     float range;
+    // this is in milliseconds
     float fire_cooldown;
     int target_id;
     int width;
     int height;
+    int upgrade_cost;
     TOWER_LEVEL level;
 } TOWER_DATA;
 
@@ -92,11 +96,11 @@ void add_game_object(GAME *game,GAME_OBJECT game_object);
 void add_object_size(GAME *game);
 void start_game(GAME *game);
 void unload_game(GAME *game);
-GAME_OBJECT init_tower(Vector2 position, const GAME *game);
+GAME_OBJECT init_tower(const Vector2* position);
 GRID_COORD screen_to_grid(Vector2 screen_pos, const TILE_MAP* tilemap);
 int get_game_objects_of_type(const GAME *game, OBJECT_TYPE type, GAME_OBJECT **out_objects);
 bool upgrade_clicked_tower(GAME *game, GRID_COORD grid_coord);
-const int* get_tower_sprites(TOWER_LEVEL level, int* out_count);
+TowerSpriteInfo get_tower_sprites(TOWER_LEVEL level);
 void draw_game_objects(const GAME* game);
 
 #endif //PROJEKT_GAME_H

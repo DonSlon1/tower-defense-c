@@ -19,8 +19,8 @@ typedef struct {
 
 // Function declarations
 TILE_MAP init_tilemap(void);
-void draw_tilemap(TILE_MAP* map);
+void draw_tilemap(const TILE_MAP* map);
 void unload_tilemap(const TILE_MAP* map);
 int get_tile_scale(const TILE_MAP* map);
-void draw_texture(const TILE_MAP* map, Texture2D tileset, int tile_index, const int x, const int y);
+void draw_texture(const TILE_MAP* map, Texture2D tileset, int tile_index, int x, int y);
 #endif // TILEMAP_H

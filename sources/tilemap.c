@@ -1,5 +1,7 @@
 #include "tilemap.h"
 #include <string.h>
+#include <stdio.h>
+#include <stdlib.h>
 
 // Layer 1 data - base layer
 static const int l_New_Layer_1[MAP_HEIGHT][MAP_WIDTH] = {
@@ -23,30 +25,6 @@ static const int l_New_Layer_1[MAP_HEIGHT][MAP_WIDTH] = {
    {355,355,355,355,355,355,355,355,355,355,355,355,355,355,355,355,355,355,355,355,355,355,355,355,355},
    {355,355,355,355,355,355,355,355,355,355,355,355,355,355,355,355,355,355,355,355,355,355,355,355,355},
    {355,355,355,355,355,355,355,355,355,355,355,355,355,355,355,355,355,355,355,355,355,355,355,355,355}
-};
-
-// Layer 2 data - decorative layer
-static const int l_New_Layer_5[MAP_HEIGHT][MAP_WIDTH] = {
-   {0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0},
-   {0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0},
-   {0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0},
-   {0,0,0,0,0,1,2,3,4,0,0,0,0,0,0,0,0,0,0,0,1,2,3,4,0},
-   {0,0,0,0,0,5,6,7,8,0,0,0,0,0,0,0,0,0,0,0,5,6,7,8,0},
-   {0,0,0,0,0,9,10,11,12,0,0,0,0,0,0,0,0,0,0,0,9,10,11,12,0},
-   {0,0,0,0,0,13,14,15,16,0,0,0,0,0,0,0,0,0,0,0,13,14,15,16,0},
-   {0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0},
-   {0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0},
-   {0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0},
-   {0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0},
-   {0,0,0,0,0,0,0,0,1,2,3,4,0,0,0,0,0,0,0,0,1,2,3,4,0},
-   {0,0,0,0,0,0,0,0,5,6,7,8,0,0,0,0,0,0,0,0,5,6,7,8,0},
-   {0,0,0,0,0,0,0,0,9,10,11,12,0,0,0,0,0,0,0,0,9,10,11,12,0},
-   {0,0,0,0,0,0,0,0,13,14,15,16,0,0,0,0,0,0,0,0,13,14,15,16,0},
-   {0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0},
-   {0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0},
-   {0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0},
-   {0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0},
-   {0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0}
 };
 
 // Layer 3 data - top decorative layer
@@ -82,7 +60,16 @@ TILE_MAP init_tilemap(void) {
 
     // Load the tileset textures for each layer
     map.tileset1 = LoadTexture(ASSETS_PATH "images/83291578-f8ec-4e3f-2f6a-6a248efa5800.png");
+    if (map.tileset1.id == 0) {
+        fprintf(stderr, "ERROR: Failed to load tileset1 texture\n");
+        exit(1);
+    }
+
     map.tileset2 = LoadTexture(ASSETS_PATH "images/bb5eb52a-6c5d-4e83-72e7-a62c7ac8ea00.png");
+    if (map.tileset2.id == 0) {
+        fprintf(stderr, "ERROR: Failed to load tileset2 texture\n");
+        exit(1);
+    }
 
     // Copy layer data
     memcpy(map.layer1, l_New_Layer_1, sizeof(l_New_Layer_1));
@@ -92,7 +79,7 @@ TILE_MAP init_tilemap(void) {
 }
 
 // Draw a single layer
-void draw_layer(const TILE_MAP* map, int layer[MAP_HEIGHT][MAP_WIDTH], const Texture2D tileset) {
+void draw_layer(const TILE_MAP* map,const int layer[MAP_HEIGHT][MAP_WIDTH], const Texture2D tileset) {
 
     for (int y = 0; y < map->map_height; y++) {
         for (int x = 0; x < map->map_width; x++) {
@@ -100,6 +87,7 @@ void draw_layer(const TILE_MAP* map, int layer[MAP_HEIGHT][MAP_WIDTH], const Tex
 
             if (tile_index == 0) continue;
 
+            // set the tile to the previous to be in correct place with the tileset
             tile_index -= 1;
 
             draw_texture(map,tileset,tile_index,x,y);
@@ -107,6 +95,9 @@ void draw_layer(const TILE_MAP* map, int layer[MAP_HEIGHT][MAP_WIDTH], const Tex
     }
 }
 int tiles_per_row(const TILE_MAP* map, const Texture2D tileset) {
+    if (map->tile_size == 0) {
+        return 0;
+    }
     return (tileset.width + map->tile_size - 1) / map->tile_size;
 }
 
@@ -115,6 +106,10 @@ void draw_texture(const TILE_MAP* map, const Texture2D tileset, const int tile_i
     const int scaled_tile_size = get_tile_scale(map);
 
     const int tiles_per_row_v = tiles_per_row(map,tileset);
+    if (tiles_per_row_v == 0) {
+        fprintf(stderr, "ERROR: Failed count tiles pre row\n");
+        return;
+    }
 
     const int src_x = (tile_index % tiles_per_row_v) * map->tile_size;
     const int src_y = (tile_index / tiles_per_row_v) * map->tile_size;
@@ -136,7 +131,7 @@ void draw_texture(const TILE_MAP* map, const Texture2D tileset, const int tile_i
     DrawTexturePro(tileset, source, dest, (Vector2){0, 0}, 0.0f, WHITE);
 }
 
-void draw_tilemap(TILE_MAP* map) {
+void draw_tilemap(const TILE_MAP* map) {
     draw_layer(map, map->layer1, map->tileset1);
     draw_layer(map, map->layer2, map->tileset2);
 }

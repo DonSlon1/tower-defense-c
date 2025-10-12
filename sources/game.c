@@ -5,44 +5,51 @@
 
 #include <stdio.h>
 #include <stdlib.h>
-#include <string.h>
 
 GAME init_game() {
     GAME game;
     game.tilemap = init_tilemap();
     game.game_objects =  malloc(sizeof(GAME_OBJECT) * STARTING_COUNT_OF_GAME_OBJECTS);
+    if (game.game_objects == nullptr) {
+        fprintf(stderr, "ERROR: Failed to allocate memory for game objects\n");
+        exit(1);
+    }
     game.object_capacity = STARTING_COUNT_OF_GAME_OBJECTS;
     game.object_count = 0;
-    game.player_money = 1000;
-    game.player_lives = 100;
+    game.player_money = STARTING_AMOUT_OF_MONEY;
+    game.player_lives = STARTING_AMOUT_OF_LIVES;
     game.next_id = 0;
 
     game.assets.towers = LoadTexture(ASSETS_PATH "images/towers.png");
+    if (game.assets.towers.id == 0) {
+        fprintf(stderr, "ERROR: Failed to load towers texture\n");
+        exit(1);
+    }
 
-    add_game_object(&game,init_tower((Vector2){5,3},&game));
-    add_game_object(&game,init_tower((Vector2){8,11},&game));
-    add_game_object(&game,init_tower((Vector2){20,3},&game));
-    add_game_object(&game,init_tower((Vector2){20,11},&game));
+    add_game_object(&game,init_tower(&(Vector2){5,3}));
+    add_game_object(&game,init_tower(&(Vector2){8,11}));
+    add_game_object(&game,init_tower(&(Vector2){20,3}));
+    add_game_object(&game,init_tower(&(Vector2){20,11}));
 
 
     return game;
 }
 
-GAME_OBJECT init_tower(const Vector2 position, const GAME *game) {
-     return (GAME_OBJECT) {
-         game->next_id,
-         TOWER,
-         position,
-         (TOWER_DATA) {
-             0,
-             0,
-             1000,
-             -1,
-             4,
-             4,
-             LEVEL_0
-         }
-     };
+GAME_OBJECT init_tower(const Vector2* position) {
+  return (GAME_OBJECT) {
+      .type = TOWER,
+      .position = *position,
+      .data.tower = {
+          .damage = 0,
+          .range = 0,
+          .fire_cooldown = 1000,
+          .target_id = -1,
+          .width = 4,
+          .height = 4,
+          .upgrade_cost = 100,
+          .level = LEVEL_0
+      }
+  };
 }
 
 
@@ -61,7 +68,7 @@ void add_object_size(GAME* game) {
 
     GAME_OBJECT* temp = realloc(game->game_objects, sizeof(GAME_OBJECT) * new_capacity);
 
-    if (temp == NULL) {
+    if (temp == nullptr) {
         fprintf(stderr, "ERROR: Failed to reallocate memory for game objects.\n");
         exit(1);
     }
@@ -87,9 +94,6 @@ void start_game(GAME *game) {
         BeginDrawing();
         ClearBackground(BLACK);
 
-        draw_tilemap(&game->tilemap);
-        BeginDrawing();
-        ClearBackground(BLACK);
         draw_tilemap(&game->tilemap);
         draw_game_objects(game);
 
@@ -165,9 +169,6 @@ int get_game_objects_of_type(const GAME *game, const OBJECT_TYPE type, GAME_OBJE
 
 bool upgrade_clicked_tower(GAME *game, const GRID_COORD grid_coord) {
 
-    if (game->player_money < 100) {
-        return 0;
-    }
     int clicked_tower_id = -1;
     for (int i = 0; i < game->object_count; i++) {
         if (game->game_objects[i].type != TOWER) {
@@ -188,9 +189,14 @@ bool upgrade_clicked_tower(GAME *game, const GRID_COORD grid_coord) {
                                grid_coord.x < tower_grid_x + tower_width &&
                                grid_coord.y >= tower_grid_y &&
                                grid_coord.y < tower_grid_y + tower_height;
+
+
         if (is_inside) {
+            if (game->player_money < tower->data.tower.upgrade_cost) {
+                break;
+            }
             tower->data.tower.level++;
-            game->player_money -= 100;
+            game->player_money -= tower->data.tower.upgrade_cost;
             clicked_tower_id = tower->id;
             break;
         }
@@ -199,7 +205,7 @@ bool upgrade_clicked_tower(GAME *game, const GRID_COORD grid_coord) {
     return clicked_tower_id != -1;
 }
 
-TowerSpriteInfo get_tower_sprite_info(const TOWER_LEVEL level) {
+TowerSpriteInfo get_tower_sprites(const TOWER_LEVEL level) {
     static const int level_0_sprites[] = {
         0, 1, 2, 3,
         4, 5, 6, 7,
@@ -227,6 +233,8 @@ TowerSpriteInfo get_tower_sprite_info(const TOWER_LEVEL level) {
             info.width = 4;
             info.height = 4;
             break;
+        default:
+            fprintf(stderr, "WARNING: Failed to found sprite for tower level\n");
     }
     return info;
 }
@@ -236,9 +244,9 @@ void draw_game_objects(const GAME* game) {
         const GAME_OBJECT* obj = &game->game_objects[i];
 
         if (obj->type == TOWER) {
-            const TowerSpriteInfo info = get_tower_sprite_info(obj->data.tower.level);
+            const TowerSpriteInfo info = get_tower_sprites(obj->data.tower.level);
 
-            if (info.sprites == NULL) {
+            if (info.sprites == nullptr) {
                 continue;
             }
 
