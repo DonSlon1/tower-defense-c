@@ -1,42 +1,35 @@
-//
-// Created by lukas on 10/13/25.
-//
-
 #include "enemy.h"
 #include <stdio.h>
 #include <math.h>
 
-// Animation frame counts per enemy type and state
-#define MUSHROOM_RUN_FRAMES 8
-#define MUSHROOM_HIT_FRAMES 5
-#define MUSHROOM_DIE_FRAMES 15
-#define FLYING_FLY_FRAMES 8
-#define FLYING_HIT_FRAMES 4
-#define FLYING_DIE_FRAMES 17
+constexpr int MUSHROOM_RUN_FRAMES = 8;
+constexpr int MUSHROOM_HIT_FRAMES = 5;
+constexpr int MUSHROOM_DIE_FRAMES = 15;
+constexpr int FLYING_FLY_FRAMES = 8;
+constexpr int FLYING_HIT_FRAMES = 4;
+constexpr int FLYING_DIE_FRAMES = 17;
+constexpr float ANIM_FRAME_DURATION = 0.1f;
+constexpr float WAYPOINT_REACHED_THRESHOLD = 0.01f;
 
-// Animation speed (seconds per frame)
-#define ANIM_FRAME_DURATION 0.1f
-
-// Path definitions
-Vector2 path_0_waypoints[] = {
-    (Vector2) {0, 2},
-    (Vector2) {19, 2},
-    (Vector2) {19, 7},
-    (Vector2) {24, 7}
+static constexpr Vector2 path_0_waypoints[] = {
+    {0, 2},
+    {19, 2},
+    {19, 7},
+    {24, 7}
 };
 
-Vector2 path_1_waypoints[] = {
-    (Vector2) {0, 15},
-    (Vector2) {19, 15},
-    (Vector2) {19, 10},
-    (Vector2) {24, 10}
+static constexpr Vector2 path_1_waypoints[] = {
+    {0, 15},
+    {19, 15},
+    {19, 10},
+    {24, 10}
 };
 
-constexpr int path_0_count = sizeof(path_0_waypoints) / sizeof(path_0_waypoints[0]);
-constexpr int path_1_count = sizeof(path_1_waypoints) / sizeof(path_1_waypoints[0]);
+static constexpr int path_0_count = sizeof(path_0_waypoints) / sizeof(path_0_waypoints[0]);
+static constexpr int path_1_count = sizeof(path_1_waypoints) / sizeof(path_1_waypoints[0]);
 
-Vector2* paths[] = { path_0_waypoints, path_1_waypoints };
-constexpr int path_counts[] = { path_0_count, path_1_count };
+static Vector2* const paths[] = { (Vector2*)path_0_waypoints, (Vector2*)path_1_waypoints };
+static constexpr int path_counts[] = { path_0_count, path_1_count };
 
 ENEMY_STATS get_enemy_stats(const ENEMY_TYPE type) {
     switch (type) {
@@ -71,14 +64,14 @@ int get_enemy_frame_count(const ENEMY_TYPE type, const ENEMY_ANIMATION_STATE sta
     return 1;
 }
 
-void update_enemy_animation(GAME_OBJECT *enemy, float delta_time) {
+void update_enemy_animation(GAME_OBJECT* const enemy, const float delta_time) {
     enemy->data.enemy.frame_timer += delta_time;
 
     if (enemy->data.enemy.frame_timer >= ANIM_FRAME_DURATION) {
         enemy->data.enemy.frame_timer = 0.0f;
         enemy->data.enemy.current_frame++;
 
-        int max_frames = get_enemy_frame_count(enemy->data.enemy.type, enemy->data.enemy.anim_state);
+        const int max_frames = get_enemy_frame_count(enemy->data.enemy.type, enemy->data.enemy.anim_state);
 
         if (enemy->data.enemy.anim_state == ENEMY_ANIM_DIE) {
             if (enemy->data.enemy.current_frame >= max_frames) {
@@ -98,7 +91,7 @@ void update_enemy_animation(GAME_OBJECT *enemy, float delta_time) {
     }
 }
 
-void update_enemy(GAME_OBJECT *enemy, float delta_time) {
+void update_enemy(GAME_OBJECT* const enemy, const float delta_time) {
     if (!enemy->is_active) {
         return;
     }
@@ -118,7 +111,7 @@ void update_enemy(GAME_OBJECT *enemy, float delta_time) {
 
     const int path_id = enemy->data.enemy.path_id;
     const int waypoint_count = path_counts[path_id];
-    const Vector2* current_path = paths[path_id];
+    const Vector2* const current_path = paths[path_id];
 
     if (enemy->data.enemy.waypoint_index >= waypoint_count) {
         enemy->is_active = false;
@@ -126,7 +119,6 @@ void update_enemy(GAME_OBJECT *enemy, float delta_time) {
     }
 
     const Vector2 target_pos = current_path[enemy->data.enemy.waypoint_index];
-
     const Vector2 direction = {
         target_pos.x - enemy->position.x,
         target_pos.y - enemy->position.y
@@ -134,13 +126,12 @@ void update_enemy(GAME_OBJECT *enemy, float delta_time) {
 
     const float distance = sqrtf(direction.x * direction.x + direction.y * direction.y);
 
-    if (distance < 0.01f) {
+    if (distance < WAYPOINT_REACHED_THRESHOLD) {
         enemy->position = target_pos;
         enemy->data.enemy.waypoint_index++;
     } else {
         const float abs_dx = fabsf(direction.x);
         const float abs_dy = fabsf(direction.y);
-
         const float distance_to_move = enemy->data.enemy.speed * delta_time;
 
         if (abs_dx > abs_dy) {
@@ -159,20 +150,22 @@ void update_enemy(GAME_OBJECT *enemy, float delta_time) {
     }
 }
 
-SPRITE_INFO get_enemy_sprites(ENEMY_TYPE type, ENEMY_ANIMATION_STATE state) {
+SPRITE_INFO get_enemy_sprites(const ENEMY_TYPE type, const ENEMY_ANIMATION_STATE state) {
     SPRITE_INFO info = { .sprites = nullptr, .count = 0, .width = 1, .height = 1 };
 
     switch (type) {
         case ENEMY_TYPE_MUSHROOM:
-            info.count = get_enemy_frame_count(type, state);
-            break;
         case ENEMY_TYPE_FLYING:
             info.count = get_enemy_frame_count(type, state);
             break;
         default:
-            fprintf(stderr, "WARNING: Unknown enemy type\n");
+            fprintf(stderr, "ERROR: Unknown enemy type\n");
             info.count = 1;
     }
 
     return info;
+}
+
+Vector2 get_path_start_position(const int path_id) {
+    return path_id == 0 ? path_0_waypoints[0] : path_1_waypoints[0];
 }

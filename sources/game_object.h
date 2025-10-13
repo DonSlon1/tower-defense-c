@@ -1,7 +1,3 @@
-//
-// Created by lukas on 10/13/25.
-//
-
 #ifndef PROJEKT_GAME_OBJECT_H
 #define PROJEKT_GAME_OBJECT_H
 
@@ -53,7 +49,6 @@ typedef struct {
 typedef struct {
     float damage;
     float range;
-    // this is in milliseconds
     float fire_cooldown;
     int target_id;
     int width;
@@ -106,4 +101,4 @@ typedef struct {
 
 } GAME_OBJECT;
 
-#endif //PROJEKT_GAME_OBJECT_H
+#endif

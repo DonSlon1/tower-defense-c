@@ -12,6 +12,11 @@
 void draw_fullscreen_image(Texture2D texture) {
     const int screen_width = GetScreenWidth();
     const int screen_height = GetScreenHeight();
+
+    if (texture.id == 0) {
+        return;
+    }
+
     const float scale = (float)screen_width / (float)texture.width;
     const int draw_height = (int)((float)texture.height * scale);
     const int y = (screen_height - draw_height) / 2;
@@ -113,7 +118,7 @@ void draw_game_objects(const GAME* game) {
             const float draw_height = draw_width / aspect_ratio;
 
             float offset_y = 0;
-            if (draw_height < tile_size) {
+            if (draw_height < (float)tile_size) {
                 offset_y = ((float)tile_size - draw_height) / 2.0f;
             }
 
@@ -166,8 +171,11 @@ void draw_game_objects(const GAME* game) {
 
 void draw_start_screen(const GAME* game) {
     draw_fullscreen_image(game->assets.start_screen);
+
     const int screen_height = GetScreenHeight();
-    draw_centered_text_with_shadow("PRESS SPACE TO START", screen_height - 100, 40, WHITE);
+    const int y_position = (screen_height * 4) / 5;
+
+    draw_centered_text_with_shadow("PRESS SPACE TO START", y_position, 35, WHITE);
 }
 
 void draw_game_over_screen(const GAME* game) {
@@ -175,13 +183,17 @@ void draw_game_over_screen(const GAME* game) {
 
     const int screen_height = GetScreenHeight();
 
+    char wave_text[256];
+    snprintf(wave_text, sizeof(wave_text), "Wave Reached: %d", game->current_wave + 1);
+    draw_centered_text_with_shadow(wave_text, screen_height / 2 + 10, 35, (Color){255, 200, 0, 255});
+
     char stats_text[256];
     snprintf(stats_text, sizeof(stats_text), "Enemies Defeated: %d", game->enemies_defeated);
-    draw_centered_text_with_shadow(stats_text, screen_height / 2 + 50, 35, WHITE);
+    draw_centered_text_with_shadow(stats_text, screen_height / 2 + 55, 35, WHITE);
 
     char money_text[256];
     snprintf(money_text, sizeof(money_text), "Final Money: $%d", game->player_money);
-    draw_centered_text_with_shadow(money_text, screen_height / 2 + 95, 35, GOLD);
+    draw_centered_text_with_shadow(money_text, screen_height / 2 + 100, 35, GOLD);
 
     draw_centered_text_with_shadow("PRESS SPACE TO RESTART", screen_height - 80, 30, LIGHTGRAY);
 }
@@ -207,14 +219,15 @@ void draw_hud(const GAME* game) {
 }
 
 void draw_wave_info(const GAME* game) {
-    const int screen_width = GetScreenWidth();
+    const int tile_size = get_tile_scale(&game->tilemap);
+    const int map_width_pixels = game->tilemap.map_width * tile_size;
 
     char wave_text[64];
     snprintf(wave_text, sizeof(wave_text), "Wave %d", game->current_wave + 1);
 
     constexpr int font_size = 30;
     const int text_width = MeasureText(wave_text, font_size);
-    const int x = screen_width - text_width - 20;
+    const int x = map_width_pixels - text_width - 20;
     constexpr int y = 60;
 
     DrawRectangle(x - 10, y - 5, text_width + 20, font_size + 10, (Color){0, 0, 0, 180});
@@ -228,7 +241,7 @@ void draw_wave_info(const GAME* game) {
 
     constexpr int progress_font_size = 18;
     const int progress_width = MeasureText(progress_text, progress_font_size);
-    const int progress_x = screen_width - progress_width - 20;
+    const int progress_x = map_width_pixels - progress_width - 20;
     constexpr int progress_y = y + font_size + 10;
 
     DrawText(progress_text, progress_x, progress_y, progress_font_size, (Color){200, 200, 200, 255});

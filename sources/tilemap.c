@@ -51,14 +51,12 @@ static const int l_new_layer_2[MAP_HEIGHT][MAP_WIDTH] = {
    {0,0,66,67,68,0,0,0,0,0,0,0,0,0,69,70,71,0,0,0,66,67,68,0,0}
 };
 
-// Initialize a tilemap with the layer data
 TILE_MAP init_tilemap() {
     TILE_MAP map;
     map.tile_size = TILE_SIZE;
     map.map_width = MAP_WIDTH;
     map.map_height = MAP_HEIGHT;
 
-    // Load the tileset textures for each layer
     map.tileset1 = LoadTexture(ASSETS_PATH "images/83291578-f8ec-4e3f-2f6a-6a248efa5800.png");
     if (map.tileset1.id == 0) {
         fprintf(stderr, "ERROR: Failed to load tileset1 texture\n");
@@ -71,14 +69,12 @@ TILE_MAP init_tilemap() {
         exit(1);
     }
 
-    // Copy layer data
     memcpy(map.layer1, l_new_layer_1, sizeof(l_new_layer_1));
     memcpy(map.layer2, l_new_layer_2, sizeof(l_new_layer_2));
 
     return map;
 }
 
-// Draw a single layer
 void draw_layer(const TILE_MAP* map, const int layer[MAP_HEIGHT][MAP_WIDTH], const Texture2D tileset) {
 
     for (int y = 0; y < map->map_height; y++) {
@@ -87,7 +83,6 @@ void draw_layer(const TILE_MAP* map, const int layer[MAP_HEIGHT][MAP_WIDTH], con
 
             if (tile_index == 0) continue;
 
-            // set the tile to the previous to be in correct place with the tileset
             tile_index -= 1;
 
             draw_texture(map,tileset,tile_index,x,y);
@@ -144,21 +139,18 @@ int get_tile_scale(const TILE_MAP* map) {
     const int screen_width = GetScreenWidth();
     const int screen_height = GetScreenHeight();
 
-    const int map_pixel_width = map->map_width * map->tile_size;
-    const int map_pixel_height = map->map_height * map->tile_size;
-
-    if (map_pixel_width == 0 || map_pixel_height == 0) {
+    if (map->map_width == 0 || map->map_height == 0) {
         fprintf(stderr, "ERROR: Invalid map dimensions for scaling\n");
-        return map->tile_size;
+        return 16;
     }
 
-    const int scale_x = screen_width / map_pixel_width;
-    const int scale_y = screen_height / map_pixel_height;
-    const int scale = scale_x < scale_y ? scale_x : scale_y; // Use smaller scale to fit
+    const int scale_x = screen_width / map->map_width;
+    const int scale_y = screen_height / map->map_height;
+    const int scale = scale_x < scale_y ? scale_x : scale_y;
 
-    if (scale == 0) {
-        return map->tile_size;
+    if (scale <= 0) {
+        return 16;
     }
 
-    return map->tile_size * scale;
+    return scale;
 }

@@ -7,7 +7,6 @@
 #include "renderer.h"
 #include "projectile.h"
 
-#include <math.h>
 #include <stdio.h>
 #include <stdlib.h>
 
@@ -75,9 +74,7 @@ void spawn_enemy(GAME *game) {
     const auto enemy_type = GetRandomValue(1, 100) <= wave.flying_chance ? ENEMY_TYPE_FLYING : ENEMY_TYPE_MUSHROOM;
     const ENEMY_STATS stats = get_enemy_stats(enemy_type);
 
-    extern Vector2 path_0_waypoints[];
-    extern Vector2 path_1_waypoints[];
-    const Vector2 start_pos = chosen_path == 0 ? path_0_waypoints[0] : path_1_waypoints[0];
+    const Vector2 start_pos = get_path_start_position(chosen_path);
 
     add_game_object(game, (GAME_OBJECT) {
         .type = ENEMY,
