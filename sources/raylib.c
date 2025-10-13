@@ -298,10 +298,6 @@ Vector2 GetMousePosition(void) {
     return (Vector2){(float)x, (float)y};
 }
 
-static void SetRandomSeed(const unsigned int seed) {
-    rprand_state = seed;
-}
-
 static int GetRandomValueInternal(const int min, const int max) {
     if (min > max) {
         const int tmp = max;
