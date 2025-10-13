@@ -79,7 +79,7 @@ void spawn_enemy(GAME *game) {
         chosen_path = 0;
     }
 
-    const auto enemy_type = GetRandomValue(1, 100) <= wave.flying_chance ? ENEMY_TYPE_FLYING : ENEMY_TYPE_MUSHROOM;
+    const ENEMY_TYPE enemy_type = GetRandomValue(1, 100) <= wave.flying_chance ? ENEMY_TYPE_FLYING : ENEMY_TYPE_MUSHROOM;
     const ENEMY_STATS stats = get_enemy_stats(enemy_type);
 
     const Vector2 start_pos = get_path_start_position(chosen_path);
@@ -430,6 +430,7 @@ int find_tower_spot_at_grid(const GAME *game, const GRID_COORD grid_coord) {
 
 bool try_build_tower(GAME *game, const int spot_index) {
     if (spot_index < 0 || spot_index >= 4) {
+        fprintf(stderr, "ERROR: Invalid tower spot index: %d\n", spot_index);
         return false;
     }
 

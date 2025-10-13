@@ -28,7 +28,7 @@ static constexpr Vector2 path_1_waypoints[] = {
 static constexpr int path_0_count = sizeof(path_0_waypoints) / sizeof(path_0_waypoints[0]);
 static constexpr int path_1_count = sizeof(path_1_waypoints) / sizeof(path_1_waypoints[0]);
 
-static Vector2* const paths[] = { (Vector2*)path_0_waypoints, (Vector2*)path_1_waypoints };
+static const Vector2* const paths[] = { path_0_waypoints, path_1_waypoints };
 static constexpr int path_counts[] = { path_0_count, path_1_count };
 
 ENEMY_STATS get_enemy_stats(const ENEMY_TYPE type) {
@@ -110,6 +110,12 @@ void update_enemy(GAME_OBJECT* const enemy, const float delta_time) {
     }
 
     const int path_id = enemy->data.enemy.path_id;
+
+    if (path_id < 0 || path_id >= 2) {
+        enemy->is_active = false;
+        return;
+    }
+
     const int waypoint_count = path_counts[path_id];
     const Vector2* const current_path = paths[path_id];
 
