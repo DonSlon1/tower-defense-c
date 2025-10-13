@@ -65,6 +65,8 @@ int get_enemy_frame_count(const ENEMY_TYPE type, const ENEMY_ANIMATION_STATE sta
 }
 
 void update_enemy_animation(GAME_OBJECT* const enemy, const float delta_time) {
+    if (enemy == nullptr) return;
+
     enemy->data.enemy.frame_timer += delta_time;
 
     if (enemy->data.enemy.frame_timer >= ANIM_FRAME_DURATION) {
@@ -92,6 +94,8 @@ void update_enemy_animation(GAME_OBJECT* const enemy, const float delta_time) {
 }
 
 void update_enemy(GAME_OBJECT* const enemy, const float delta_time) {
+    if (enemy == nullptr) return;
+
     if (!enemy->is_active) {
         return;
     }

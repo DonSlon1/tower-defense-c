@@ -28,6 +28,10 @@ GAME_OBJECT init_tower(const Vector2 position) {
 }
 
 UPGRADE_RESULT upgrade_clicked_tower(GAME *game, const GRID_COORD grid_coord) {
+    if (game == nullptr || game->game_objects == nullptr) {
+        return UPGRADE_NOT_FOUND;
+    }
+
     for (size_t i = 0; i < game->object_count; i++) {
         if (game->game_objects[i].type != TOWER) {
             continue;
@@ -103,6 +107,10 @@ SPRITE_INFO get_tower_sprites(const TOWER_LEVEL level) {
 }
 
 int find_nearest_enemy_in_range(const GAME *game, const Vector2 tower_pos, const float range) {
+    if (game == nullptr || game->game_objects == nullptr) {
+        return -1;
+    }
+
     int nearest_id = -1;
     float nearest_dist_sq = range * range;
 
@@ -133,6 +141,8 @@ int find_nearest_enemy_in_range(const GAME *game, const Vector2 tower_pos, const
 }
 
 void update_tower(GAME *game, GAME_OBJECT *tower, float delta_time) {
+    if (game == nullptr || tower == nullptr) return;
+
     if (!tower->is_active || tower->data.tower.level == LEVEL_0) {
         return;
     }

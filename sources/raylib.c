@@ -378,7 +378,7 @@ void SetMouseCursor(const char* const fileName) {
     SDL_SetCursor(cursor_normal);
 }
 
-void SetMousePointer(const char* const fileName) {
+void set_mouse_pointer(const char* const fileName) {
     SDL_Surface* const surface = IMG_Load(fileName);
     if (!surface) {
         fprintf(stderr, "ERROR: Failed to load pointer cursor %s: %s\n", fileName, IMG_GetError());

@@ -11,6 +11,8 @@
 #include <stdlib.h>
 
 void handle_playing_input(GAME *game) {
+    if (game == nullptr) return;
+
     const GRID_COORD grid_pos = screen_to_grid(GetMousePosition(), &game->tilemap);
 
     const GAME_OBJECT* hovered_tower = find_tower_at_grid(game, grid_pos);
@@ -70,6 +72,8 @@ WAVE_CONFIG get_wave_config(const int wave_number) {
 }
 
 void spawn_enemy(GAME *game) {
+    if (game == nullptr) return;
+
     const WAVE_CONFIG wave = get_wave_config(game->current_wave);
 
     int chosen_path;
@@ -107,6 +111,8 @@ void spawn_enemy(GAME *game) {
 }
 
 void start_next_wave(GAME *game) {
+    if (game == nullptr) return;
+
     game->current_wave++;
     game->enemies_spawned_in_wave = 0;
     game->enemies_alive = 0;
@@ -116,6 +122,8 @@ void start_next_wave(GAME *game) {
 }
 
 void reset_game(GAME *game) {
+    if (game == nullptr) return;
+
     game->player_lives = STARTING_AMOUNT_OF_LIVES;
     game->player_money = STARTING_AMOUNT_OF_MONEY;
     game->enemies_defeated = 0;
@@ -213,6 +221,8 @@ GAME init_game() {
 }
 
 void add_game_object(GAME *game, GAME_OBJECT game_object) {
+    if (game == nullptr || game->game_objects == nullptr) return;
+
     if (game->object_count == game->object_capacity) {
         grow_object_capacity(game);
     }
@@ -224,6 +234,8 @@ void add_game_object(GAME *game, GAME_OBJECT game_object) {
 }
 
 void grow_object_capacity(GAME* game) {
+    if (game == nullptr) return;
+
     size_t new_capacity = game->object_capacity * 2;
     if (new_capacity == 0) new_capacity = STARTING_COUNT_OF_GAME_OBJECTS;
 
@@ -332,6 +344,8 @@ void start_game(GAME *game) {
 }
 
 void unload_game(GAME *game) {
+    if (game == nullptr) return;
+
     unload_tilemap(&game->tilemap);
     free(game->game_objects);
     UnloadTexture(game->assets.towers);
@@ -349,6 +363,10 @@ void unload_game(GAME *game) {
 }
 
 GRID_COORD screen_to_grid(const Vector2 screen_pos, const TILE_MAP* tilemap) {
+    if (tilemap == nullptr) {
+        return (GRID_COORD){.x = 0, .y = 0};
+    }
+
     const int scaled_tile_size = get_tile_scale(tilemap);
 
     GRID_COORD grid_pos;
@@ -363,6 +381,10 @@ GRID_COORD screen_to_grid(const Vector2 screen_pos, const TILE_MAP* tilemap) {
  * @return The number of objects found, or -1 on memory allocation failure.
  */
 int get_game_objects_of_type(const GAME *game, const OBJECT_TYPE type, GAME_OBJECT **out_objects) {
+    if (game == nullptr || out_objects == nullptr) {
+        return -1;
+    }
+
     int count = 0;
     for (size_t i = 0; i < game->object_count;i++) {
         if (game->game_objects[i].type == type) {
@@ -393,6 +415,8 @@ int get_game_objects_of_type(const GAME *game, const OBJECT_TYPE type, GAME_OBJE
 }
 
 void update_game_state(GAME *game, const float delta_time) {
+    if (game == nullptr || game->game_objects == nullptr) return;
+
     for (int i = 0; i < game->object_count; i++ ) {
         switch (game->game_objects[i].type) {
             case ENEMY:
@@ -411,6 +435,8 @@ void update_game_state(GAME *game, const float delta_time) {
 }
 
 int find_tower_spot_at_grid(const GAME *game, const GRID_COORD grid_coord) {
+    if (game == nullptr) return -1;
+
     for (int i = 0; i < 4; i++) {
         const TOWER_SPOT* spot = &game->tower_spots[i];
         const int spot_x = (int)spot->position.x;
@@ -429,6 +455,8 @@ int find_tower_spot_at_grid(const GAME *game, const GRID_COORD grid_coord) {
 }
 
 bool try_build_tower(GAME *game, const int spot_index) {
+    if (game == nullptr) return false;
+
     if (spot_index < 0 || spot_index >= 4) {
         fprintf(stderr, "ERROR: Invalid tower spot index: %d\n", spot_index);
         return false;
@@ -456,6 +484,8 @@ bool try_build_tower(GAME *game, const int spot_index) {
 }
 
 GAME_OBJECT* find_tower_at_grid(const GAME *game, const GRID_COORD grid_coord) {
+    if (game == nullptr || game->game_objects == nullptr) return nullptr;
+
     for (size_t i = 0; i < game->object_count; i++) {
         if (game->game_objects[i].type != TOWER) {
             continue;
@@ -481,6 +511,8 @@ GAME_OBJECT* find_tower_at_grid(const GAME *game, const GRID_COORD grid_coord) {
 }
 
 void remove_inactive_objects(GAME *game) {
+    if (game == nullptr || game->game_objects == nullptr) return;
+
     size_t write_index = 0;
     for (size_t read_index = 0; read_index < game->object_count; read_index++) {
         const GAME_OBJECT* obj = &game->game_objects[read_index];
@@ -507,7 +539,7 @@ void remove_inactive_objects(GAME *game) {
 
     game->object_count = write_index;
 
-    if (game->object_capacity > STARTING_COUNT_OF_GAME_OBJECTS * 2 &&
+    if (game->object_capacity > (size_t)STARTING_COUNT_OF_GAME_OBJECTS * 2 &&
         game->object_count < game->object_capacity / 4) {
 
         const size_t new_capacity = game->object_capacity / 2;

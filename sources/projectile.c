@@ -45,6 +45,8 @@ GAME_OBJECT create_projectile(Vector2 start_pos, Vector2 target_pos, float damag
 }
 
 void update_projectile(const GAME *game, GAME_OBJECT *projectile, const float delta_time) {
+    if (game == nullptr || projectile == nullptr || game->game_objects == nullptr) return;
+
     if (!projectile->is_active) {
         return;
     }
