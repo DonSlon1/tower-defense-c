@@ -15,6 +15,7 @@ static int screen_height = 0;
 static int target_fps = 60;
 static TTF_Font* default_font = nullptr;
 static unsigned int rprand_state = 0;
+static SDL_Cursor* custom_cursor = nullptr;
 
 void InitWindow(const int width, const int height, const char* const title) {
     if (SDL_Init(SDL_INIT_VIDEO) < 0) {
@@ -70,6 +71,7 @@ void SetTargetFPS(const int fps) {
 }
 
 void CloseWindow(void) {
+    if (custom_cursor) SDL_FreeCursor(custom_cursor);
     if (default_font) TTF_CloseFont(default_font);
     free(keys_pressed);
     free(mouse_pressed);
@@ -316,4 +318,45 @@ static int GetRandomValueInternal(const int min, const int max) {
 
 int GetRandomValue(const int min, const int max) {
     return GetRandomValueInternal(min, max);
+}
+
+void SetMouseCursor(const char* const fileName) {
+    SDL_Surface* const surface = IMG_Load(fileName);
+    if (!surface) {
+        fprintf(stderr, "ERROR: Failed to load cursor %s: %s\n", fileName, IMG_GetError());
+        return;
+    }
+
+    if (custom_cursor) {
+        SDL_FreeCursor(custom_cursor);
+    }
+
+    custom_cursor = SDL_CreateColorCursor(surface, 0, 0);
+    SDL_FreeSurface(surface);
+
+    if (!custom_cursor) {
+        fprintf(stderr, "ERROR: Failed to create cursor: %s\n", SDL_GetError());
+        return;
+    }
+
+    SDL_SetCursor(custom_cursor);
+}
+
+void ShowCursor(void) {
+    SDL_ShowCursor(SDL_ENABLE);
+}
+
+void HideCursor(void) {
+    SDL_ShowCursor(SDL_DISABLE);
+}
+
+void SetWindowIcon(const char* const fileName) {
+    SDL_Surface* const surface = IMG_Load(fileName);
+    if (!surface) {
+        fprintf(stderr, "ERROR: Failed to load icon %s: %s\n", fileName, IMG_GetError());
+        return;
+    }
+
+    SDL_SetWindowIcon(window, surface);
+    SDL_FreeSurface(surface);
 }

@@ -12,6 +12,9 @@ int main(void)
 {
     InitWindow(SCREEN_WIDTH, SCREEN_HEIGHT, WINDOW_TITLE);
     SetTargetFPS(60);
+    SetWindowIcon(ASSETS_PATH "images/towers.png");
+    SetMouseCursor(ASSETS_PATH "cursor/Middle Ages--pointer--SweezyCursors.png");
+
     GAME game = init_game();
 
     start_game(&game);

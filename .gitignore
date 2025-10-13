@@ -140,3 +140,67 @@ CMakeUserPresets.json
 
 # Android studio 3.1+ serialized cache file
 
+### C/C++ template
+# Build directories
+build/
+
+# Compiled Object files
+*.o
+*.obj
+*.slo
+*.lo
+
+# Compiled Dynamic libraries
+*.so
+*.so.*
+*.dylib
+*.dll
+
+# Compiled Static libraries
+*.a
+*.la
+*.lib
+
+# Executables
+*.exe
+*.out
+*.app
+projekt
+
+# Debug files
+*.dSYM/
+*.su
+*.idb
+*.pdb
+
+# Address Sanitizer
+*.asan
+
+# Core dumps
+core
+core.*
+vgcore.*
+
+# Temporary files
+*.tmp
+*.temp
+*.log
+*.bak
+*.orig
+*~
+
+# VS Code
+.vscode/
+
+# Cursor IDE
+.cursor/
+
+# Screenshots for testing
+img.png
+
+# Keep important assets
+!assets/**/*.png
+!assets/**/*.jpg
+!assets/**/*.bmp
+!assets/**/*.cur
+
