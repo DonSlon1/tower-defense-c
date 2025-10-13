@@ -6,6 +6,17 @@
 #include <stdio.h>
 #include <math.h>
 
+// Animation frame counts per enemy type and state
+#define MUSHROOM_RUN_FRAMES 8
+#define MUSHROOM_HIT_FRAMES 5
+#define MUSHROOM_DIE_FRAMES 15
+#define FLYING_FLY_FRAMES 8
+#define FLYING_HIT_FRAMES 4
+#define FLYING_DIE_FRAMES 17
+
+// Animation speed (seconds per frame)
+#define ANIM_FRAME_DURATION 0.1f
+
 // Path definitions
 Vector2 path_0_waypoints[] = {
     (Vector2) {0, 2},
@@ -29,21 +40,79 @@ constexpr int path_counts[] = { path_0_count, path_1_count };
 
 ENEMY_STATS get_enemy_stats(const ENEMY_TYPE type) {
     switch (type) {
-        case ENEMY_TYPE_SCOUT:
-            return (ENEMY_STATS) { .health = 50.0f, .speed = 3.5f };
-        case ENEMY_TYPE_NORMAL:
-            return (ENEMY_STATS) { .health = 100.0f, .speed = 2.5f };
-        case ENEMY_TYPE_TANK:
-            return (ENEMY_STATS) { .health = 200.0f, .speed = 1.5f };
-        case ENEMY_TYPE_SPEEDY:
-            return (ENEMY_STATS) { .health = 40.0f, .speed = 4.5f };
+        case ENEMY_TYPE_MUSHROOM:
+            return (ENEMY_STATS) { .health = 80.0f, .speed = 1.5f, .gold_reward = 25 };
+        case ENEMY_TYPE_FLYING:
+            return (ENEMY_STATS) { .health = 50.0f, .speed = 3.5f, .gold_reward = 15 };
         default:
-            return (ENEMY_STATS) { .health = 100.0f, .speed = 2.5f };
+            return (ENEMY_STATS) { .health = 80.0f, .speed = 1.5f, .gold_reward = 25 };
+    }
+}
+
+int get_enemy_frame_count(const ENEMY_TYPE type, const ENEMY_ANIMATION_STATE state) {
+    switch (type) {
+        case ENEMY_TYPE_MUSHROOM:
+            switch (state) {
+                case ENEMY_ANIM_RUN: return MUSHROOM_RUN_FRAMES;
+                case ENEMY_ANIM_HIT: return MUSHROOM_HIT_FRAMES;
+                case ENEMY_ANIM_DIE: return MUSHROOM_DIE_FRAMES;
+            }
+            break;
+        case ENEMY_TYPE_FLYING:
+            switch (state) {
+                case ENEMY_ANIM_RUN: return FLYING_FLY_FRAMES;
+                case ENEMY_ANIM_HIT: return FLYING_HIT_FRAMES;
+                case ENEMY_ANIM_DIE: return FLYING_DIE_FRAMES;
+            }
+            break;
+        default:
+            return 1;
+    }
+    return 1;
+}
+
+void update_enemy_animation(GAME_OBJECT *enemy, float delta_time) {
+    enemy->data.enemy.frame_timer += delta_time;
+
+    if (enemy->data.enemy.frame_timer >= ANIM_FRAME_DURATION) {
+        enemy->data.enemy.frame_timer = 0.0f;
+        enemy->data.enemy.current_frame++;
+
+        int max_frames = get_enemy_frame_count(enemy->data.enemy.type, enemy->data.enemy.anim_state);
+
+        if (enemy->data.enemy.anim_state == ENEMY_ANIM_DIE) {
+            if (enemy->data.enemy.current_frame >= max_frames) {
+                enemy->data.enemy.current_frame = max_frames - 1;
+                enemy->is_active = false;
+            }
+        } else if (enemy->data.enemy.anim_state == ENEMY_ANIM_HIT) {
+            if (enemy->data.enemy.current_frame >= max_frames) {
+                enemy->data.enemy.anim_state = ENEMY_ANIM_RUN;
+                enemy->data.enemy.current_frame = 0;
+            }
+        } else {
+            if (enemy->data.enemy.current_frame >= max_frames) {
+                enemy->data.enemy.current_frame = 0;
+            }
+        }
     }
 }
 
 void update_enemy(GAME_OBJECT *enemy, float delta_time) {
     if (!enemy->is_active) {
+        return;
+    }
+
+    update_enemy_animation(enemy, delta_time);
+
+    if (enemy->data.enemy.anim_state == ENEMY_ANIM_DIE) {
+        return;
+    }
+
+    if (enemy->data.enemy.health <= 0) {
+        enemy->data.enemy.anim_state = ENEMY_ANIM_DIE;
+        enemy->data.enemy.current_frame = 0;
+        enemy->data.enemy.frame_timer = 0.0f;
         return;
     }
 
@@ -90,38 +159,20 @@ void update_enemy(GAME_OBJECT *enemy, float delta_time) {
     }
 }
 
-SPRITE_INFO get_enemy_sprites(const ENEMY_TYPE type) {
-    static constexpr int scout_sprites[] = { 0 };
-    static constexpr int normal_sprites[] = { 1 };
-    static constexpr int tank_sprites[] = { 2 };
-    static constexpr int speedy_sprites[] = { 3 };
-
-    SPRITE_INFO info = { .sprites = nullptr, .count = 0, .width = 0, .height = 0 };
+SPRITE_INFO get_enemy_sprites(ENEMY_TYPE type, ENEMY_ANIMATION_STATE state) {
+    SPRITE_INFO info = { .sprites = nullptr, .count = 0, .width = 1, .height = 1 };
 
     switch (type) {
-        case ENEMY_TYPE_SCOUT:
-            info.sprites = scout_sprites;
-            info.count = sizeof(scout_sprites) / sizeof(scout_sprites[0]);
+        case ENEMY_TYPE_MUSHROOM:
+            info.count = get_enemy_frame_count(type, state);
             break;
-        case ENEMY_TYPE_NORMAL:
-            info.sprites = normal_sprites;
-            info.count = sizeof(normal_sprites) / sizeof(normal_sprites[0]);
-            break;
-        case ENEMY_TYPE_TANK:
-            info.sprites = tank_sprites;
-            info.count = sizeof(tank_sprites) / sizeof(tank_sprites[0]);
-            break;
-        case ENEMY_TYPE_SPEEDY:
-            info.sprites = speedy_sprites;
-            info.count = sizeof(speedy_sprites) / sizeof(speedy_sprites[0]);
+        case ENEMY_TYPE_FLYING:
+            info.count = get_enemy_frame_count(type, state);
             break;
         default:
             fprintf(stderr, "WARNING: Unknown enemy type\n");
-            info.sprites = normal_sprites;
             info.count = 1;
     }
 
-    info.width = 1;
-    info.height = 1;
     return info;
 }

@@ -6,12 +6,10 @@
 #define PROJEKT_GAME_OBJECT_H
 
 #include <raylib.h>
-#include <stdbool.h>
 
 typedef enum {
     TOWER,
     ENEMY,
-    ANIMATION,
     PROJECTILE
 } OBJECT_TYPE;
 
@@ -22,12 +20,16 @@ typedef enum {
 } TOWER_LEVEL;
 
 typedef enum {
-    ENEMY_TYPE_SCOUT,
-    ENEMY_TYPE_NORMAL,
-    ENEMY_TYPE_TANK,
-    ENEMY_TYPE_SPEEDY,
+    ENEMY_TYPE_MUSHROOM,
+    ENEMY_TYPE_FLYING,
     ENEMY_TYPE_COUNT
 } ENEMY_TYPE;
+
+typedef enum {
+    ENEMY_ANIM_RUN,
+    ENEMY_ANIM_HIT,
+    ENEMY_ANIM_DIE
+} ENEMY_ANIMATION_STATE;
 
 typedef enum {
     UPGRADE_SUCCESS,
@@ -66,8 +68,22 @@ typedef struct {
     float speed;
     int waypoint_index;
     int path_id;
+    int gold_reward;
     ENEMY_TYPE type;
+    ENEMY_ANIMATION_STATE anim_state;
+    int current_frame;
+    float frame_timer;
 } ENEMY_DATA;
+
+typedef struct {
+    Vector2 velocity;
+    float damage;
+    int owner_id;
+    int target_id;
+    int current_frame;
+    float frame_timer;
+    int row;
+} PROJECTILE_DATA;
 
 typedef struct {
     int current_frame;
@@ -85,6 +101,7 @@ typedef struct {
         TOWER_DATA tower;
         ENEMY_DATA enemy;
         ANIMATION_DATA animation;
+        PROJECTILE_DATA projectile;
     } data;
 
 } GAME_OBJECT;

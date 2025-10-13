@@ -10,15 +10,17 @@
 typedef struct {
     float health;
     float speed;
+    int gold_reward;
 } ENEMY_STATS;
 
-// Get stats for a specific enemy type
 ENEMY_STATS get_enemy_stats(ENEMY_TYPE type);
 
-// Update enemy position and state
 void update_enemy(GAME_OBJECT *enemy, float delta_time);
 
-// Get sprite information for enemy rendering
-SPRITE_INFO get_enemy_sprites(ENEMY_TYPE type);
+SPRITE_INFO get_enemy_sprites(ENEMY_TYPE type, ENEMY_ANIMATION_STATE state);
+
+int get_enemy_frame_count(ENEMY_TYPE type, ENEMY_ANIMATION_STATE state);
+
+void update_enemy_animation(GAME_OBJECT *enemy, float delta_time);
 
 #endif //PROJEKT_ENEMY_H
