@@ -51,19 +51,19 @@ static const int l_new_layer_2[MAP_HEIGHT][MAP_WIDTH] = {
    {0,0,66,67,68,0,0,0,0,0,0,0,0,0,69,70,71,0,0,0,66,67,68,0,0}
 };
 
-TILE_MAP init_tilemap() {
-    TILE_MAP map;
+tile_map init_tilemap() {
+    tile_map map;
     map.tile_size = TILE_SIZE;
     map.map_width = MAP_WIDTH;
     map.map_height = MAP_HEIGHT;
 
-    map.tileset1 = LoadTexture(ASSETS_PATH "images/83291578-f8ec-4e3f-2f6a-6a248efa5800.png");
+    map.tileset1 = load_texture(ASSETS_PATH "images/83291578-f8ec-4e3f-2f6a-6a248efa5800.png");
     if (map.tileset1.id == 0) {
         fprintf(stderr, "ERROR: Failed to load tileset1 texture\n");
         exit(1);
     }
 
-    map.tileset2 = LoadTexture(ASSETS_PATH "images/bb5eb52a-6c5d-4e83-72e7-a62c7ac8ea00.png");
+    map.tileset2 = load_texture(ASSETS_PATH "images/bb5eb52a-6c5d-4e83-72e7-a62c7ac8ea00.png");
     if (map.tileset2.id == 0) {
         fprintf(stderr, "ERROR: Failed to load tileset2 texture\n");
         exit(1);
@@ -75,7 +75,7 @@ TILE_MAP init_tilemap() {
     return map;
 }
 
-void draw_layer(const TILE_MAP* map, const int layer[MAP_HEIGHT][MAP_WIDTH], const Texture2D tileset) {
+void draw_layer(const tile_map* map, const int layer[MAP_HEIGHT][MAP_WIDTH], const texture_2d tileset) {
 
     for (int y = 0; y < map->map_height; y++) {
         for (int x = 0; x < map->map_width; x++) {
@@ -89,14 +89,14 @@ void draw_layer(const TILE_MAP* map, const int layer[MAP_HEIGHT][MAP_WIDTH], con
         }
     }
 }
-int tiles_per_row(const TILE_MAP* map, const Texture2D tileset) {
+int tiles_per_row(const tile_map* map, const texture_2d tileset) {
     if (map->tile_size == 0) {
         return 0;
     }
     return (tileset.width + map->tile_size - 1) / map->tile_size;
 }
 
-void draw_texture(const TILE_MAP* map, const Texture2D tileset, const int tile_index, const int x, const int y) {
+void draw_texture(const tile_map* map, const texture_2d tileset, const int tile_index, const int x, const int y) {
 
     const int scaled_tile_size = get_tile_scale(map);
 
@@ -106,38 +106,38 @@ void draw_texture(const TILE_MAP* map, const Texture2D tileset, const int tile_i
         return;
     }
 
-    const int src_x = (tile_index % tiles_per_row_v) * map->tile_size;
-    const int src_y = (tile_index / tiles_per_row_v) * map->tile_size;
+    const int src_x = tile_index % tiles_per_row_v * map->tile_size;
+    const int src_y = tile_index / tiles_per_row_v * map->tile_size;
 
-    const Rectangle source = {
+    const rectangle source = {
         (float)src_x,
         (float)src_y,
         (float)map->tile_size,
         (float)map->tile_size
     };
 
-    const Rectangle dest = {
+    const rectangle dest = {
         (float)(x * scaled_tile_size),
         (float)(y * scaled_tile_size),
         (float) scaled_tile_size,
         (float) scaled_tile_size
     };
 
-    DrawTexturePro(tileset, source, dest, (Vector2){0, 0}, 0.0f, WHITE);
+    draw_texture_pro(tileset, source, dest, (vector2){0, 0}, 0.0f, white);
 }
 
-void draw_tilemap(const TILE_MAP* map) {
+void draw_tilemap(const tile_map* map) {
     draw_layer(map, map->layer1, map->tileset1);
     draw_layer(map, map->layer2, map->tileset2);
 }
 
-void unload_tilemap(const TILE_MAP* map) {
-    UnloadTexture(map->tileset1);
-    UnloadTexture(map->tileset2);
+void unload_tilemap(const tile_map* map) {
+    unload_texture(map->tileset1);
+    unload_texture(map->tileset2);
 }
-int get_tile_scale(const TILE_MAP* map) {
-    const int screen_width = GetScreenWidth();
-    const int screen_height = GetScreenHeight();
+int get_tile_scale(const tile_map* map) {
+    const int screen_width = get_screen_width();
+    const int screen_height = get_screen_height();
 
     if (map->map_width == 0 || map->map_height == 0) {
         fprintf(stderr, "ERROR: Invalid map dimensions for scaling\n");

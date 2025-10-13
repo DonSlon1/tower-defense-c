@@ -10,33 +10,33 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-void handle_playing_input(GAME *game) {
+void handle_playing_input(game *game) {
     if (game == nullptr) return;
 
-    const GRID_COORD grid_pos = screen_to_grid(GetMousePosition(), &game->tilemap);
+    const grid_coord grid_pos = screen_to_grid(get_mouse_position(), &game->tilemap);
 
-    const GAME_OBJECT* hovered_tower = find_tower_at_grid(game, grid_pos);
+    const game_object* hovered_tower = find_tower_at_grid(game, grid_pos);
     const int spot_index = find_tower_spot_at_grid(game, grid_pos);
 
     if (hovered_tower != nullptr || spot_index >= 0) {
-        UsePointerCursor();
+        use_pointer_cursor();
     } else {
-        UseNormalCursor();
+        use_normal_cursor();
     }
 
-    if (IsMouseButtonPressed(MOUSE_BUTTON_LEFT)) {
-        const UPGRADE_RESULT result = upgrade_clicked_tower(game, grid_pos);
+    if (is_mouse_button_pressed(mouse_button_left)) {
+        const upgrade_result result = upgrade_clicked_tower(game, grid_pos);
         switch (result) {
-            case UPGRADE_SUCCESS:
+            case upgrade_success:
                 printf("Tower upgraded successfully!\n");
                 break;
-            case UPGRADE_INSUFFICIENT_FUNDS:
+            case upgrade_insufficient_funds:
                 printf("Insufficient funds for upgrade\n");
                 break;
-            case UPGRADE_MAX_LEVEL:
+            case upgrade_max_level:
                 printf("Tower is already at max level\n");
                 break;
-            case UPGRADE_NOT_FOUND:
+            case upgrade_not_found:
                 if (spot_index >= 0) {
                     try_build_tower(game, spot_index);
                 }
@@ -45,8 +45,8 @@ void handle_playing_input(GAME *game) {
     }
 }
 
-WAVE_CONFIG get_wave_config(const int wave_number) {
-    const WAVE_CONFIG waves[] = {
+wave_config get_wave_config(const int wave_number) {
+    const wave_config waves[] = {
         {.enemy_count = 5, .spawn_interval = 2.0f, .flying_chance = 20, .allow_bottom_path = false},
         {.enemy_count = 8, .spawn_interval = 1.8f, .flying_chance = 25, .allow_bottom_path = false},
         {.enemy_count = 10, .spawn_interval = 1.6f, .flying_chance = 30, .allow_bottom_path = true},
@@ -60,7 +60,7 @@ WAVE_CONFIG get_wave_config(const int wave_number) {
     };
 
     if (wave_number >= MAX_WAVES) {
-        return (WAVE_CONFIG){
+        return (wave_config){
             .enemy_count = 35 + (wave_number - MAX_WAVES + 1) * 5,
             .spawn_interval = 0.5f,
             .flying_chance = 70,
@@ -71,25 +71,25 @@ WAVE_CONFIG get_wave_config(const int wave_number) {
     return waves[wave_number];
 }
 
-void spawn_enemy(GAME *game) {
+void spawn_enemy(game *game) {
     if (game == nullptr) return;
 
-    const WAVE_CONFIG wave = get_wave_config(game->current_wave);
+    const wave_config wave = get_wave_config(game->current_wave);
 
     int chosen_path;
     if (wave.allow_bottom_path) {
-        chosen_path = GetRandomValue(0, 1);
+        chosen_path = get_random_value(0, 1);
     } else {
         chosen_path = 0;
     }
 
-    const ENEMY_TYPE enemy_type = GetRandomValue(1, 100) <= wave.flying_chance ? ENEMY_TYPE_FLYING : ENEMY_TYPE_MUSHROOM;
-    const ENEMY_STATS stats = get_enemy_stats(enemy_type);
+    const enemy_type enemy_type = get_random_value(1, 100) <= wave.flying_chance ? enemy_type_flying : enemy_type_mushroom;
+    const enemy_stats stats = get_enemy_stats(enemy_type);
 
-    const Vector2 start_pos = get_path_start_position(chosen_path);
+    const vector2 start_pos = get_path_start_position(chosen_path);
 
-    add_game_object(game, (GAME_OBJECT) {
-        .type = ENEMY,
+    add_game_object(game, (game_object) {
+        .type = enemy,
         .position = start_pos,
         .is_active = true,
         .data.enemy = {
@@ -100,7 +100,7 @@ void spawn_enemy(GAME *game) {
             .path_id = chosen_path,
             .gold_reward = stats.gold_reward,
             .type = enemy_type,
-            .anim_state = ENEMY_ANIM_RUN,
+            .anim_state = enemy_anim_run,
             .current_frame = 0,
             .frame_timer = 0.0f
         }
@@ -110,18 +110,18 @@ void spawn_enemy(GAME *game) {
     game->enemies_alive++;
 }
 
-void start_next_wave(GAME *game) {
+void start_next_wave(game *game) {
     if (game == nullptr) return;
 
     game->current_wave++;
     game->enemies_spawned_in_wave = 0;
     game->enemies_alive = 0;
 
-    const WAVE_CONFIG wave = get_wave_config(game->current_wave);
+    const wave_config wave = get_wave_config(game->current_wave);
     game->enemy_spawn_timer = wave.spawn_interval;
 }
 
-void reset_game(GAME *game) {
+void reset_game(game *game) {
     if (game == nullptr) return;
 
     game->player_lives = STARTING_AMOUNT_OF_LIVES;
@@ -133,17 +133,17 @@ void reset_game(GAME *game) {
     game->wave_break_timer = 0.0f;
 
     for (size_t i = 0; i < game->object_count; i++) {
-        if (game->game_objects[i].type == ENEMY || game->game_objects[i].type == PROJECTILE) {
+        if (game->game_objects[i].type == enemy || game->game_objects[i].type == projectile) {
             game->game_objects[i].is_active = false;
         }
     }
     remove_inactive_objects(game);
 }
 
-GAME init_game() {
-    GAME game;
+game init_game() {
+    game game;
     game.tilemap = init_tilemap();
-    game.game_objects =  malloc(sizeof(GAME_OBJECT) * STARTING_COUNT_OF_GAME_OBJECTS);
+    game.game_objects =  malloc(sizeof(game_object) * STARTING_COUNT_OF_GAME_OBJECTS);
     if (game.game_objects == nullptr) {
         fprintf(stderr, "ERROR: Failed to allocate memory for game objects\n");
         unload_tilemap(&game.tilemap);
@@ -155,7 +155,7 @@ GAME init_game() {
     game.player_lives = STARTING_AMOUNT_OF_LIVES;
     game.enemy_spawn_timer = 0.0f;
     game.next_id = 0;
-    game.state = GAME_STATE_START;
+    game.state = game_state_start;
     game.enemies_defeated = 0;
 
     game.current_wave = -1;
@@ -163,21 +163,21 @@ GAME init_game() {
     game.enemies_alive = 0;
     game.wave_break_timer = 0.0f;
 
-    game.tower_spots[0] = (TOWER_SPOT){.position = (Vector2){5, 3}, .occupied = false};
-    game.tower_spots[1] = (TOWER_SPOT){.position = (Vector2){8, 11}, .occupied = false};
-    game.tower_spots[2] = (TOWER_SPOT){.position = (Vector2){15, 3}, .occupied = false};
-    game.tower_spots[3] = (TOWER_SPOT){.position = (Vector2){15, 11}, .occupied = false};
+    game.tower_spots[0] = (tower_spot){.position = (vector2){5, 3}, .occupied = false};
+    game.tower_spots[1] = (tower_spot){.position = (vector2){8, 11}, .occupied = false};
+    game.tower_spots[2] = (tower_spot){.position = (vector2){15, 3}, .occupied = false};
+    game.tower_spots[3] = (tower_spot){.position = (vector2){15, 11}, .occupied = false};
 
-    game.assets.towers = LoadTexture(ASSETS_PATH "images/towers.png");
-    game.assets.mushroom_run = LoadTexture(ASSETS_PATH "images/Mushroom-Run.png");
-    game.assets.mushroom_hit = LoadTexture(ASSETS_PATH "images/Mushroom-Hit.png");
-    game.assets.mushroom_die = LoadTexture(ASSETS_PATH "images/Mushroom-Die.png");
-    game.assets.flying_fly = LoadTexture(ASSETS_PATH "images/Enemy3-Fly.png");
-    game.assets.flying_hit = LoadTexture(ASSETS_PATH "images/Enemy3-Hit.png");
-    game.assets.flying_die = LoadTexture(ASSETS_PATH "images/Enemy3-Die.png");
-    game.assets.iceball = LoadTexture(ASSETS_PATH "images/Iceball_84x9.png");
-    game.assets.start_screen = LoadTexture(ASSETS_PATH "images/start_screen.png");
-    game.assets.defeat_screen = LoadTexture(ASSETS_PATH "images/defeat_screen.png");
+    game.assets.towers = load_texture(ASSETS_PATH "images/towers.png");
+    game.assets.mushroom_run = load_texture(ASSETS_PATH "images/Mushroom-Run.png");
+    game.assets.mushroom_hit = load_texture(ASSETS_PATH "images/Mushroom-Hit.png");
+    game.assets.mushroom_die = load_texture(ASSETS_PATH "images/Mushroom-Die.png");
+    game.assets.flying_fly = load_texture(ASSETS_PATH "images/Enemy3-Fly.png");
+    game.assets.flying_hit = load_texture(ASSETS_PATH "images/Enemy3-Hit.png");
+    game.assets.flying_die = load_texture(ASSETS_PATH "images/Enemy3-Die.png");
+    game.assets.iceball = load_texture(ASSETS_PATH "images/Iceball_84x9.png");
+    game.assets.start_screen = load_texture(ASSETS_PATH "images/start_screen.png");
+    game.assets.defeat_screen = load_texture(ASSETS_PATH "images/defeat_screen.png");
 
     if (game.assets.towers.id == 0) {
         fprintf(stderr, "error: failed to load towers texture\n");
@@ -220,7 +220,7 @@ GAME init_game() {
     return game;
 }
 
-void add_game_object(GAME *game, GAME_OBJECT game_object) {
+void add_game_object(game *game, game_object game_object) {
     if (game == nullptr || game->game_objects == nullptr) return;
 
     if (game->object_count == game->object_capacity) {
@@ -233,7 +233,7 @@ void add_game_object(GAME *game, GAME_OBJECT game_object) {
     game->next_id++;
 }
 
-void grow_object_capacity(GAME* game) {
+void grow_object_capacity(game* game) {
     if (game == nullptr) return;
 
     size_t new_capacity = game->object_capacity * 2;
@@ -244,7 +244,7 @@ void grow_object_capacity(GAME* game) {
         exit(1);
     }
 
-    GAME_OBJECT* temp = realloc(game->game_objects, sizeof(GAME_OBJECT) * new_capacity);
+    game_object* temp = realloc(game->game_objects, sizeof(game_object) * new_capacity);
 
     if (temp == nullptr) {
         fprintf(stderr, "ERROR: Failed to reallocate memory for game objects.\n");
@@ -255,22 +255,22 @@ void grow_object_capacity(GAME* game) {
     game->object_capacity = new_capacity;
 }
 
-void start_game(GAME *game) {
+void start_game(game *game) {
     if (game == nullptr || game->game_objects == nullptr) exit(1);
 
-    while (!WindowShouldClose()) {
-        const float delta_time = GetFrameTime();
+    while (!window_should_close()) {
+        const float delta_time = get_frame_time();
 
-        if (game->state == GAME_STATE_START && IsKeyPressed(KEY_SPACE)) {
+        if (game->state == game_state_start && is_key_pressed(key_space)) {
             start_next_wave(game);
-            game->state = GAME_STATE_PLAYING;
+            game->state = game_state_playing;
         }
-        else if (game->state == GAME_STATE_PLAYING) {
-            if (game->player_lives <= 0) game->state = GAME_STATE_GAME_OVER;
+        else if (game->state == game_state_playing) {
+            if (game->player_lives <= 0) game->state = game_state_game_over;
 
             handle_playing_input(game);
 
-            const WAVE_CONFIG current_wave = get_wave_config(game->current_wave);
+            const wave_config current_wave = get_wave_config(game->current_wave);
 
             if (game->enemies_spawned_in_wave < current_wave.enemy_count) {
                 game->enemy_spawn_timer -= delta_time;
@@ -281,95 +281,95 @@ void start_game(GAME *game) {
             }
 
             else if (game->enemies_alive == 0) {
-                game->state = GAME_STATE_WAVE_BREAK;
+                game->state = game_state_wave_break;
                 game->wave_break_timer = WAVE_BREAK_DURATION;
             }
 
             update_game_state(game, delta_time);
         }
-        else if (game->state == GAME_STATE_WAVE_BREAK) {
+        else if (game->state == game_state_wave_break) {
             handle_playing_input(game);
             update_game_state(game, delta_time);
 
             game->wave_break_timer -= delta_time;
-            if (game->wave_break_timer <= 0 || IsKeyPressed(KEY_SPACE)) {
+            if (game->wave_break_timer <= 0 || is_key_pressed(key_space)) {
                 start_next_wave(game);
-                game->state = GAME_STATE_PLAYING;
+                game->state = game_state_playing;
             }
         }
-        else if (game->state == GAME_STATE_GAME_OVER && IsKeyPressed(KEY_SPACE)) {
+        else if (game->state == game_state_game_over && is_key_pressed(key_space)) {
             reset_game(game);
             start_next_wave(game);
-            game->state = GAME_STATE_PLAYING;
+            game->state = game_state_playing;
         }
 
-        BeginDrawing();
-        ClearBackground(BLACK);
+        begin_drawing();
+        clear_background(black);
         draw_tilemap(&game->tilemap);
 
-        if (game->state == GAME_STATE_PLAYING) {
+        if (game->state == game_state_playing) {
             draw_tower_spots(game);
         }
 
         draw_game_objects(game);
 
-        if (game->state == GAME_STATE_START) {
+        if (game->state == game_state_start) {
             draw_start_screen(game);
         }
-        else if (game->state == GAME_STATE_PLAYING) {
+        else if (game->state == game_state_playing) {
             draw_hud(game);
             draw_wave_info(game);
 
-            const GRID_COORD mouse_grid = screen_to_grid(GetMousePosition(), &game->tilemap);
-            const GAME_OBJECT* hovered_tower = find_tower_at_grid(game, mouse_grid);
+            const grid_coord mouse_grid = screen_to_grid(get_mouse_position(), &game->tilemap);
+            const game_object* hovered_tower = find_tower_at_grid(game, mouse_grid);
             if (hovered_tower != nullptr) {
-                const Vector2 mouse_pos = GetMousePosition();
+                const vector2 mouse_pos = get_mouse_position();
                 draw_tower_info(hovered_tower, (int)mouse_pos.x + 15, (int)mouse_pos.y + 15);
             }
         }
-        else if (game->state == GAME_STATE_WAVE_BREAK) {
+        else if (game->state == game_state_wave_break) {
             draw_hud(game);
             draw_wave_info(game);
             draw_wave_break_screen(game);
         }
-        else if (game->state == GAME_STATE_GAME_OVER) {
+        else if (game->state == game_state_game_over) {
             draw_hud(game);
             draw_game_over_screen(game);
         }
 
-        DrawFPS(10, 10);
-        EndDrawing();
+        draw_fps(10, 10);
+        end_drawing();
     }
     unload_game(game);
 }
 
-void unload_game(GAME *game) {
+void unload_game(game *game) {
     if (game == nullptr) return;
 
     unload_tilemap(&game->tilemap);
     free(game->game_objects);
-    UnloadTexture(game->assets.towers);
-    UnloadTexture(game->assets.mushroom_run);
-    UnloadTexture(game->assets.mushroom_hit);
-    UnloadTexture(game->assets.mushroom_die);
-    UnloadTexture(game->assets.flying_fly);
-    UnloadTexture(game->assets.flying_hit);
-    UnloadTexture(game->assets.flying_die);
-    UnloadTexture(game->assets.iceball);
-    UnloadTexture(game->assets.start_screen);
-    UnloadTexture(game->assets.defeat_screen);
+    unload_texture(game->assets.towers);
+    unload_texture(game->assets.mushroom_run);
+    unload_texture(game->assets.mushroom_hit);
+    unload_texture(game->assets.mushroom_die);
+    unload_texture(game->assets.flying_fly);
+    unload_texture(game->assets.flying_hit);
+    unload_texture(game->assets.flying_die);
+    unload_texture(game->assets.iceball);
+    unload_texture(game->assets.start_screen);
+    unload_texture(game->assets.defeat_screen);
     game->game_objects = nullptr;
     printf("GAME: was unloaded\n");
 }
 
-GRID_COORD screen_to_grid(const Vector2 screen_pos, const TILE_MAP* tilemap) {
+grid_coord screen_to_grid(const vector2 screen_pos, const tile_map* tilemap) {
     if (tilemap == nullptr) {
-        return (GRID_COORD){.x = 0, .y = 0};
+        return (grid_coord){.x = 0, .y = 0};
     }
 
     const int scaled_tile_size = get_tile_scale(tilemap);
 
-    GRID_COORD grid_pos;
+    grid_coord grid_pos;
     grid_pos.x = (int)(screen_pos.x / (float)scaled_tile_size);
     grid_pos.y = (int)(screen_pos.y / (float)scaled_tile_size);
 
@@ -380,7 +380,7 @@ GRID_COORD screen_to_grid(const Vector2 screen_pos, const TILE_MAP* tilemap) {
  * IMPORTANT: The caller is responsible for freeing the memory allocated for 'out_objects'
  * @return The number of objects found, or -1 on memory allocation failure.
  */
-int get_game_objects_of_type(const GAME *game, const OBJECT_TYPE type, GAME_OBJECT **out_objects) {
+int get_game_objects_of_type(const game *game, const object_type type, game_object **out_objects) {
     if (game == nullptr || out_objects == nullptr) {
         return -1;
     }
@@ -396,7 +396,7 @@ int get_game_objects_of_type(const GAME *game, const OBJECT_TYPE type, GAME_OBJE
         return 0;
     }
 
-    *out_objects = malloc(sizeof(GAME_OBJECT) * count);
+    *out_objects = malloc(sizeof(game_object) * count);
 
     if (*out_objects == nullptr) {
         fprintf(stderr, "ERROR: Failed to allocate memory for game objects array.\n");
@@ -414,18 +414,18 @@ int get_game_objects_of_type(const GAME *game, const OBJECT_TYPE type, GAME_OBJE
     return count;
 }
 
-void update_game_state(GAME *game, const float delta_time) {
+void update_game_state(game *game, const float delta_time) {
     if (game == nullptr || game->game_objects == nullptr) return;
 
     for (int i = 0; i < game->object_count; i++ ) {
         switch (game->game_objects[i].type) {
-            case ENEMY:
+            case enemy:
                 update_enemy(&game->game_objects[i], delta_time);
                 break;
-            case TOWER:
+            case tower:
                 update_tower(game, &game->game_objects[i], delta_time);
                 break;
-            case PROJECTILE:
+            case projectile:
                 update_projectile(game, &game->game_objects[i], delta_time);
                 break;
         }
@@ -434,11 +434,11 @@ void update_game_state(GAME *game, const float delta_time) {
     remove_inactive_objects(game);
 }
 
-int find_tower_spot_at_grid(const GAME *game, const GRID_COORD grid_coord) {
+int find_tower_spot_at_grid(const game *game, const grid_coord grid_coord) {
     if (game == nullptr) return -1;
 
     for (int i = 0; i < 4; i++) {
-        const TOWER_SPOT* spot = &game->tower_spots[i];
+        const tower_spot* spot = &game->tower_spots[i];
         const int spot_x = (int)spot->position.x;
         const int spot_y = (int)spot->position.y;
 
@@ -454,7 +454,7 @@ int find_tower_spot_at_grid(const GAME *game, const GRID_COORD grid_coord) {
     return -1;
 }
 
-bool try_build_tower(GAME *game, const int spot_index) {
+bool try_build_tower(game *game, const int spot_index) {
     if (game == nullptr) return false;
 
     if (spot_index < 0 || spot_index >= 4) {
@@ -462,7 +462,7 @@ bool try_build_tower(GAME *game, const int spot_index) {
         return false;
     }
 
-    TOWER_SPOT* spot = &game->tower_spots[spot_index];
+    tower_spot* spot = &game->tower_spots[spot_index];
 
     if (spot->occupied) {
         return false;
@@ -483,15 +483,15 @@ bool try_build_tower(GAME *game, const int spot_index) {
     return true;
 }
 
-GAME_OBJECT* find_tower_at_grid(const GAME *game, const GRID_COORD grid_coord) {
+game_object* find_tower_at_grid(const game *game, const grid_coord grid_coord) {
     if (game == nullptr || game->game_objects == nullptr) return nullptr;
 
     for (size_t i = 0; i < game->object_count; i++) {
-        if (game->game_objects[i].type != TOWER) {
+        if (game->game_objects[i].type != tower) {
             continue;
         }
 
-        GAME_OBJECT* tower = &game->game_objects[i];
+        game_object* tower = &game->game_objects[i];
 
         const int tower_grid_x = (int)tower->position.x;
         const int tower_grid_y = (int)tower->position.y;
@@ -510,15 +510,15 @@ GAME_OBJECT* find_tower_at_grid(const GAME *game, const GRID_COORD grid_coord) {
     return nullptr;
 }
 
-void remove_inactive_objects(GAME *game) {
+void remove_inactive_objects(game *game) {
     if (game == nullptr || game->game_objects == nullptr) return;
 
     size_t write_index = 0;
     for (size_t read_index = 0; read_index < game->object_count; read_index++) {
-        const GAME_OBJECT* obj = &game->game_objects[read_index];
+        const game_object* obj = &game->game_objects[read_index];
 
         if (!obj->is_active) {
-            if (obj->type == ENEMY) {
+            if (obj->type == enemy) {
                 game->enemies_alive--;
                 if (obj->data.enemy.health <= 0) {
                     game->enemies_defeated++;
@@ -544,7 +544,7 @@ void remove_inactive_objects(GAME *game) {
 
         const size_t new_capacity = game->object_capacity / 2;
 
-        GAME_OBJECT* temp = realloc(game->game_objects, sizeof(GAME_OBJECT) * new_capacity);
+        game_object* temp = realloc(game->game_objects, sizeof(game_object) * new_capacity);
 
         if (temp != nullptr) {
             game->game_objects = temp;

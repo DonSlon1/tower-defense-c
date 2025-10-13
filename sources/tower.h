@@ -18,16 +18,16 @@
 #define TOWER_LEVEL_1_RANGE 8.0f
 #define TOWER_LEVEL_1_FIRE_COOLDOWN 0.6f
 
-typedef struct GAME GAME;
+typedef struct game game;
 
-GAME_OBJECT init_tower(Vector2 position);
+game_object init_tower(vector2 position);
 
-UPGRADE_RESULT upgrade_clicked_tower(GAME *game, GRID_COORD grid_coord);
+upgrade_result upgrade_clicked_tower(game *game, grid_coord grid_coord);
 
-SPRITE_INFO get_tower_sprites(TOWER_LEVEL level);
+sprite_info get_tower_sprites(tower_level level);
 
-void update_tower(GAME *game, GAME_OBJECT *tower, float delta_time);
+void update_tower(game *game, game_object *tower, float delta_time);
 
-int find_nearest_enemy_in_range(const GAME *game, Vector2 tower_pos, float range);
+int find_nearest_enemy_in_range(const game *game, vector2 tower_pos, float range);
 
 #endif //PROJEKT_TOWER_H

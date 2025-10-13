@@ -22,37 +22,37 @@ typedef struct {
     float spawn_interval;
     int flying_chance;
     bool allow_bottom_path;
-} WAVE_CONFIG;
+} wave_config;
 
 typedef enum {
-    GAME_STATE_START,
-    GAME_STATE_PLAYING,
-    GAME_STATE_WAVE_BREAK,
-    GAME_STATE_GAME_OVER
-} GAME_STATE;
+    game_state_start,
+    game_state_playing,
+    game_state_wave_break,
+    game_state_game_over
+} game_state;
 
 typedef struct {
-    Texture2D towers;
-    Texture2D mushroom_run;
-    Texture2D mushroom_hit;
-    Texture2D mushroom_die;
-    Texture2D flying_fly;
-    Texture2D flying_hit;
-    Texture2D flying_die;
-    Texture2D iceball;
-    Texture2D start_screen;
-    Texture2D defeat_screen;
-} ASSETS;
+    texture_2d towers;
+    texture_2d mushroom_run;
+    texture_2d mushroom_hit;
+    texture_2d mushroom_die;
+    texture_2d flying_fly;
+    texture_2d flying_hit;
+    texture_2d flying_die;
+    texture_2d iceball;
+    texture_2d start_screen;
+    texture_2d defeat_screen;
+} assets;
 
 typedef struct {
-    Vector2 position;
+    vector2 position;
     bool occupied;
-} TOWER_SPOT;
+} tower_spot;
 
-typedef struct GAME {
-    GAME_OBJECT *game_objects;
-    TILE_MAP tilemap;
-    ASSETS assets;
+typedef struct game {
+    game_object *game_objects;
+    tile_map tilemap;
+    assets assets;
 
     size_t object_count;
     size_t object_capacity;
@@ -62,30 +62,30 @@ typedef struct GAME {
     int next_id;
     float enemy_spawn_timer;
 
-    TOWER_SPOT tower_spots[4];
+    tower_spot tower_spots[4];
 
     int current_wave;
     int enemies_spawned_in_wave;
     int enemies_alive;
     float wave_break_timer;
 
-    GAME_STATE state;
+    game_state state;
     int enemies_defeated;
-} GAME;
+} game;
 
-GAME init_game();
-void add_game_object(GAME *game, GAME_OBJECT game_object);
-void grow_object_capacity(GAME *game);
-void start_game(GAME *game);
-void unload_game(GAME *game);
-GRID_COORD screen_to_grid(Vector2 screen_pos, const TILE_MAP* tilemap);
-int get_game_objects_of_type(const GAME *game, OBJECT_TYPE type, GAME_OBJECT **out_objects);
-void update_game_state(GAME *game, float delta_time);
-void remove_inactive_objects(GAME *game);
-GAME_OBJECT* find_tower_at_grid(const GAME *game, GRID_COORD grid_coord);
-int find_tower_spot_at_grid(const GAME *game, GRID_COORD grid_coord);
-bool try_build_tower(GAME *game, int spot_index);
-WAVE_CONFIG get_wave_config(int wave_number);
-void start_next_wave(GAME *game);
+game init_game();
+void add_game_object(game *game, game_object game_object);
+void grow_object_capacity(game *game);
+void start_game(game *game);
+void unload_game(game *game);
+grid_coord screen_to_grid(vector2 screen_pos, const tile_map* tilemap);
+int get_game_objects_of_type(const game *game, object_type type, game_object **out_objects);
+void update_game_state(game *game, float delta_time);
+void remove_inactive_objects(game *game);
+game_object* find_tower_at_grid(const game *game, grid_coord grid_coord);
+int find_tower_spot_at_grid(const game *game, grid_coord grid_coord);
+bool try_build_tower(game *game, int spot_index);
+wave_config get_wave_config(int wave_number);
+void start_next_wave(game *game);
 
 #endif //PROJEKT_GAME_H

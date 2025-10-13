@@ -1,6 +1,5 @@
 #include "game.h"
 #include "raylib.h"
-#include "tilemap.h"
 
 #define SCREEN_WIDTH (1024)
 #define SCREEN_HEIGHT (576)
@@ -10,17 +9,17 @@
 
 int main(void)
 {
-    InitWindow(SCREEN_WIDTH, SCREEN_HEIGHT, WINDOW_TITLE);
-    SetTargetFPS(60);
-    SetWindowIcon(ASSETS_PATH "images/towers.png");
-    SetMouseCursor(ASSETS_PATH "cursor/Middle Ages--cursor--SweezyCursors.png");
+    init_window(SCREEN_WIDTH, SCREEN_HEIGHT, WINDOW_TITLE);
+    set_target_fps(60);
+    set_window_icon(ASSETS_PATH "images/towers.png");
+    set_mouse_cursor(ASSETS_PATH "cursor/Middle Ages--cursor--SweezyCursors.png");
     set_mouse_pointer(ASSETS_PATH "cursor/Middle Ages--pointer--SweezyCursors.png");
 
-    GAME game = init_game();
+    game game = init_game();
 
     start_game(&game);
 
-    CloseWindow();
+    close_window();
 
     return 0;
 }

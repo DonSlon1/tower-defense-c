@@ -5,75 +5,75 @@
 #include <stdint.h>
 #include <stdio.h>
 
-typedef struct Vector2 {
+typedef struct vector2 {
     float x;
     float y;
-} Vector2;
+} vector2;
 
-typedef struct Rectangle {
+typedef struct rectangle {
     float x;
     float y;
     float width;
     float height;
-} Rectangle;
+} rectangle;
 
-typedef struct Color {
+typedef struct color {
     unsigned char r;
     unsigned char g;
     unsigned char b;
     unsigned char a;
-} Color;
+} color;
 
-typedef struct Texture2D {
+typedef struct texture_2d {
     uintptr_t id;
     int width;
     int height;
-} Texture2D;
+} texture_2d;
 
-constexpr Color WHITE = {255, 255, 255, 255};
-constexpr Color BLACK = {0, 0, 0, 255};
-constexpr Color RED = {255, 0, 0, 255};
-constexpr Color GREEN = {0, 255, 0, 255};
-constexpr Color SKYBLUE = {135, 206, 235, 255};
-constexpr Color GOLD = {255, 215, 0, 255};
-constexpr Color LIGHTGRAY = {200, 200, 200, 255};
+constexpr color white = {255, 255, 255, 255};
+constexpr color black = {0, 0, 0, 255};
+constexpr color red = {255, 0, 0, 255};
+constexpr color green = {0, 255, 0, 255};
+constexpr color skyblue = {135, 206, 235, 255};
+constexpr color gold = {255, 215, 0, 255};
+constexpr color lightgray = {200, 200, 200, 255};
 
-constexpr int KEY_SPACE = SDLK_SPACE;
-constexpr int MOUSE_BUTTON_LEFT = SDL_BUTTON_LEFT;
-constexpr int MOUSE_BUTTON_RIGHT = SDL_BUTTON_RIGHT;
+constexpr int key_space = SDLK_SPACE;
+constexpr int mouse_button_left = SDL_BUTTON_LEFT;
+constexpr int mouse_button_right = SDL_BUTTON_RIGHT;
 
-void InitWindow(int width, int height, const char* title);
-void SetTargetFPS(int fps);
-void CloseWindow(void);
-bool WindowShouldClose(void);
-void BeginDrawing(void);
-void EndDrawing(void);
-void ClearBackground(Color color);
-int GetScreenWidth(void);
-int GetScreenHeight(void);
-float GetFrameTime(void);
+void init_window(int width, int height, const char* title);
+void set_target_fps(int fps);
+void close_window(void);
+bool window_should_close(void);
+void begin_drawing(void);
+void end_drawing(void);
+void clear_background(color color);
+int get_screen_width(void);
+int get_screen_height(void);
+float get_frame_time(void);
 
-Texture2D LoadTexture(const char* fileName);
-void UnloadTexture(Texture2D texture);
-void DrawTexturePro(Texture2D texture, Rectangle source, Rectangle dest, Vector2 origin, float rotation, Color tint);
-void DrawRectangle(int posX, int posY, int width, int height, Color color);
-void DrawRectangleLines(int posX, int posY, int width, int height, Color color);
-void DrawText(const char* text, int posX, int posY, int fontSize, Color color);
-int MeasureText(const char* text, int fontSize);
-void DrawFPS(int posX, int posY);
+texture_2d load_texture(const char* file_name);
+void unload_texture(texture_2d texture);
+void draw_texture_pro(texture_2d texture, rectangle source, rectangle dest, vector2 origin, float rotation, color tint);
+void draw_rectangle(int pos_x, int pos_y, int width, int height, color color);
+void draw_rectangle_lines(int pos_x, int pos_y, int width, int height, color color);
+void draw_text(const char* text, int pos_x, int pos_y, int font_size, color color);
+int measure_text(const char* text, int font_size);
+void draw_fps(int pos_x, int pos_y);
 
-bool IsKeyPressed(int key);
-bool IsMouseButtonPressed(int button);
-Vector2 GetMousePosition(void);
-int GetRandomValue(int min, int max);
+bool is_key_pressed(int key);
+bool is_mouse_button_pressed(int button);
+vector2 get_mouse_position(void);
+int get_random_value(int min, int max);
 
-void SetMouseCursor(const char* fileName);
-void set_mouse_pointer(const char* fileName);
-void UseNormalCursor(void);
-void UsePointerCursor(void);
-void ShowCursor(void);
-void HideCursor(void);
+void set_mouse_cursor(const char* file_name);
+void set_mouse_pointer(const char* file_name);
+void use_normal_cursor(void);
+void use_pointer_cursor(void);
+void show_cursor(void);
+void hide_cursor(void);
 
-void SetWindowIcon(const char* fileName);
+void set_window_icon(const char* file_name);
 
 #endif

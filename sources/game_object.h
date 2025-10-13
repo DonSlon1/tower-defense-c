@@ -4,47 +4,47 @@
 #include <raylib.h>
 
 typedef enum {
-    TOWER,
-    ENEMY,
-    PROJECTILE
-} OBJECT_TYPE;
+    tower,
+    enemy,
+    projectile
+} object_type;
 
 typedef enum {
-    LEVEL_0,
-    LEVEL_1,
-    LEVEL_MAX
-} TOWER_LEVEL;
+    level_0,
+    level_1,
+    level_max
+} tower_level;
 
 typedef enum {
-    ENEMY_TYPE_MUSHROOM,
-    ENEMY_TYPE_FLYING,
-    ENEMY_TYPE_COUNT
-} ENEMY_TYPE;
+    enemy_type_mushroom,
+    enemy_type_flying,
+    enemy_type_count
+} enemy_type;
 
 typedef enum {
-    ENEMY_ANIM_RUN,
-    ENEMY_ANIM_HIT,
-    ENEMY_ANIM_DIE
-} ENEMY_ANIMATION_STATE;
+    enemy_anim_run,
+    enemy_anim_hit,
+    enemy_anim_die
+} enemy_animation_state;
 
 typedef enum {
-    UPGRADE_SUCCESS,
-    UPGRADE_INSUFFICIENT_FUNDS,
-    UPGRADE_MAX_LEVEL,
-    UPGRADE_NOT_FOUND
-} UPGRADE_RESULT;
+    upgrade_success,
+    upgrade_insufficient_funds,
+    upgrade_max_level,
+    upgrade_not_found
+} upgrade_result;
 
 typedef struct {
     const int* sprites;
     int count;
     int width;
     int height;
-} SPRITE_INFO;
+} sprite_info;
 
 typedef struct {
     int x;
     int y;
-} GRID_COORD;
+} grid_coord;
 
 typedef struct {
     float damage;
@@ -54,8 +54,8 @@ typedef struct {
     int width;
     int height;
     int upgrade_cost;
-    TOWER_LEVEL level;
-} TOWER_DATA;
+    tower_level level;
+} tower_data;
 
 typedef struct {
     float health;
@@ -64,41 +64,41 @@ typedef struct {
     int waypoint_index;
     int path_id;
     int gold_reward;
-    ENEMY_TYPE type;
-    ENEMY_ANIMATION_STATE anim_state;
+    enemy_type type;
+    enemy_animation_state anim_state;
     int current_frame;
     float frame_timer;
-} ENEMY_DATA;
+} enemy_data;
 
 typedef struct {
-    Vector2 velocity;
+    vector2 velocity;
     float damage;
     int owner_id;
     int target_id;
     int current_frame;
     float frame_timer;
     int row;
-} PROJECTILE_DATA;
+} projectile_data;
 
 typedef struct {
     int current_frame;
     int total_frames;
     float frame_duration;
-} ANIMATION_DATA;
+} animation_data;
 
 typedef struct {
     int id;
-    OBJECT_TYPE type;
-    Vector2 position;
+    object_type type;
+    vector2 position;
     bool is_active;
 
     union {
-        TOWER_DATA tower;
-        ENEMY_DATA enemy;
-        ANIMATION_DATA animation;
-        PROJECTILE_DATA projectile;
+        tower_data tower;
+        enemy_data enemy;
+        animation_data animation;
+        projectile_data projectile;
     } data;
 
-} GAME_OBJECT;
+} game_object;
 
 #endif

@@ -18,7 +18,7 @@ static unsigned int rprand_state = 0;
 static SDL_Cursor* cursor_normal = nullptr;
 static SDL_Cursor* cursor_pointer = nullptr;
 
-void InitWindow(const int width, const int height, const char* const title) {
+void init_window(const int width, const int height, const char* const title) {
     if (SDL_Init(SDL_INIT_VIDEO) < 0) {
         fprintf(stderr, "ERROR: SDL_Init failed: %s\n", SDL_GetError());
         exit(1);
@@ -67,11 +67,11 @@ void InitWindow(const int width, const int height, const char* const title) {
     SDL_SetRenderDrawBlendMode(renderer, SDL_BLENDMODE_BLEND);
 }
 
-void SetTargetFPS(const int fps) {
+void set_target_fps(const int fps) {
     target_fps = fps;
 }
 
-void CloseWindow(void) {
+void close_window(void) {
     if (cursor_normal) SDL_FreeCursor(cursor_normal);
     if (cursor_pointer) SDL_FreeCursor(cursor_pointer);
     if (default_font) TTF_CloseFont(default_font);
@@ -84,7 +84,7 @@ void CloseWindow(void) {
     SDL_Quit();
 }
 
-bool WindowShouldClose(void) {
+bool window_should_close(void) {
     SDL_Event event;
     memset(keys_pressed, 0, SDL_NUM_SCANCODES * sizeof(bool));
     memset(mouse_pressed, 0, (SDL_BUTTON_X2 + 1) * sizeof(bool));
@@ -108,7 +108,7 @@ bool WindowShouldClose(void) {
     return false;
 }
 
-void BeginDrawing(void) {
+void begin_drawing(void) {
     int window_w = 0, window_h = 0;
     SDL_GetWindowSize(window, &window_w, &window_h);
 
@@ -121,36 +121,36 @@ void BeginDrawing(void) {
     SDL_RenderClear(renderer);
 }
 
-void EndDrawing(void) {
+void end_drawing(void) {
     SDL_RenderPresent(renderer);
 }
 
-void ClearBackground(const Color color) {
+void clear_background(const color color) {
     SDL_SetRenderDrawColor(renderer, color.r, color.g, color.b, color.a);
     SDL_RenderClear(renderer);
 }
 
-int GetScreenWidth(void) {
+int get_screen_width(void) {
     int w = 0;
     SDL_GetWindowSize(window, &w, nullptr);
     return w > 0 ? w : screen_width;
 }
 
-int GetScreenHeight(void) {
+int get_screen_height(void) {
     int h = 0;
     SDL_GetWindowSize(window, nullptr, &h);
     return h > 0 ? h : screen_height;
 }
 
-float GetFrameTime(void) {
+float get_frame_time(void) {
     return delta_time;
 }
 
-Texture2D LoadTexture(const char* const fileName) {
-    SDL_Surface* const surface = IMG_Load(fileName);
+texture_2d load_texture(const char* const file_name) {
+    SDL_Surface* const surface = IMG_Load(file_name);
     if (!surface) {
-        fprintf(stderr, "ERROR: Failed to load texture %s: %s\n", fileName, IMG_GetError());
-        return (Texture2D){0, 0, 0};
+        fprintf(stderr, "ERROR: Failed to load texture %s: %s\n", file_name, IMG_GetError());
+        return (texture_2d){0, 0, 0};
     }
 
     SDL_Texture* const texture = SDL_CreateTextureFromSurface(renderer, surface);
@@ -159,27 +159,27 @@ Texture2D LoadTexture(const char* const fileName) {
     SDL_FreeSurface(surface);
 
     if (!texture) {
-        fprintf(stderr, "ERROR: Failed to create texture %s: %s\n", fileName, SDL_GetError());
-        return (Texture2D){0, 0, 0};
+        fprintf(stderr, "ERROR: Failed to create texture %s: %s\n", file_name, SDL_GetError());
+        return (texture_2d){0, 0, 0};
     }
 
     SDL_SetTextureBlendMode(texture, SDL_BLENDMODE_BLEND);
 
-    return (Texture2D){(uintptr_t)texture, width, height};
+    return (texture_2d){(uintptr_t)texture, width, height};
 }
 
-void UnloadTexture(const Texture2D texture) {
+void unload_texture(const texture_2d texture) {
     if (texture.id != 0) {
         SDL_DestroyTexture((SDL_Texture*)(uintptr_t)texture.id);
     }
 }
 
-void DrawTexturePro(const Texture2D texture, const Rectangle source, const Rectangle dest, const Vector2 origin, const float rotation, const Color tint) {
+void draw_texture_pro(const texture_2d texture, const rectangle source, const rectangle dest, const vector2 origin, const float rotation, const color tint) {
     if (texture.id == 0) {
         return;
     }
 
-    SDL_Texture* const sdl_texture = (SDL_Texture*)(uintptr_t)texture.id;
+    const auto sdl_texture = (SDL_Texture*)(uintptr_t)texture.id;
 
     if (SDL_SetTextureColorMod(sdl_texture, tint.r, tint.g, tint.b) < 0) {
         fprintf(stderr, "ERROR: SDL_SetTextureColorMod failed: %s\n", SDL_GetError());
@@ -207,31 +207,31 @@ void DrawTexturePro(const Texture2D texture, const Rectangle source, const Recta
 
     const SDL_Point center = {(int)origin.x, (int)origin.y};
 
-    if (SDL_RenderCopyEx(renderer, sdl_texture, &src_rect, &dst_rect, (double)rotation, &center, SDL_FLIP_NONE) < 0) {
+    if (SDL_RenderCopyEx(renderer, sdl_texture, &src_rect, &dst_rect, rotation, &center, SDL_FLIP_NONE) < 0) {
         fprintf(stderr, "ERROR: SDL_RenderCopyEx failed: %s\n", SDL_GetError());
     }
 }
 
-void DrawRectangle(const int posX, const int posY, const int width, const int height, const Color color) {
+void draw_rectangle(const int pos_x, const int pos_y, const int width, const int height, const color color) {
     SDL_SetRenderDrawColor(renderer, color.r, color.g, color.b, color.a);
-    const SDL_Rect rect = {posX, posY, width, height};
+    const SDL_Rect rect = {pos_x, pos_y, width, height};
     SDL_RenderFillRect(renderer, &rect);
 }
 
-void DrawRectangleLines(const int posX, const int posY, const int width, const int height, const Color color) {
+void draw_rectangle_lines(const int pos_x, const int pos_y, const int width, const int height, const color color) {
     SDL_SetRenderDrawColor(renderer, color.r, color.g, color.b, color.a);
-    const SDL_Rect rect = {posX, posY, width, height};
+    const SDL_Rect rect = {pos_x, pos_y, width, height};
     SDL_RenderDrawRect(renderer, &rect);
 }
 
-void DrawText(const char* const text, const int posX, const int posY, const int fontSize, const Color color) {
+void draw_text(const char* const text, const int pos_x, const int pos_y, const int font_size, const color color) {
     if (!text) return;
 
-    if (!default_font || TTF_FontHeight(default_font) != fontSize) {
+    if (!default_font || TTF_FontHeight(default_font) != font_size) {
         if (default_font) TTF_CloseFont(default_font);
-        default_font = TTF_OpenFont("/usr/share/fonts/TTF/DejaVuSans.ttf", fontSize);
+        default_font = TTF_OpenFont("/usr/share/fonts/TTF/DejaVuSans.ttf", font_size);
         if (!default_font) {
-            default_font = TTF_OpenFont("/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf", fontSize);
+            default_font = TTF_OpenFont("/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf", font_size);
         }
         if (!default_font) {
             fprintf(stderr, "ERROR: Failed to load font: %s\n", TTF_GetError());
@@ -256,22 +256,22 @@ void DrawText(const char* const text, const int posX, const int posY, const int 
         return;
     }
 
-    const SDL_Rect dest = {posX, posY, width, height};
+    const SDL_Rect dest = {pos_x, pos_y, width, height};
     SDL_RenderCopy(renderer, texture, nullptr, &dest);
     SDL_DestroyTexture(texture);
 }
 
-int MeasureText(const char* const text, const int fontSize) {
+int measure_text(const char* const text, const int font_size) {
     if (!text) return 0;
 
-    if (!default_font || TTF_FontHeight(default_font) != fontSize) {
+    if (!default_font || TTF_FontHeight(default_font) != font_size) {
         if (default_font) TTF_CloseFont(default_font);
-        default_font = TTF_OpenFont("/usr/share/fonts/TTF/DejaVuSans.ttf", fontSize);
+        default_font = TTF_OpenFont("/usr/share/fonts/TTF/DejaVuSans.ttf", font_size);
         if (!default_font) {
-            default_font = TTF_OpenFont("/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf", fontSize);
+            default_font = TTF_OpenFont("/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf", font_size);
         }
         if (!default_font) {
-            return (int)strlen(text) * (fontSize / 2);
+            return (int)strlen(text) * (font_size / 2);
         }
     }
 
@@ -280,34 +280,34 @@ int MeasureText(const char* const text, const int fontSize) {
     return width;
 }
 
-void DrawFPS(const int posX, const int posY) {
+void draw_fps(const int pos_x, const int pos_y) {
     const int fps = (int)(1.0f / delta_time);
     char fps_text[32];
     snprintf(fps_text, sizeof(fps_text), "FPS: %d", fps);
-    DrawText(fps_text, posX, posY, 20, GREEN);
+    draw_text(fps_text, pos_x, pos_y, 20, green);
 }
 
-bool IsKeyPressed(const int key) {
+bool is_key_pressed(const int key) {
     const SDL_Scancode scancode = SDL_GetScancodeFromKey(key);
     return keys_pressed[scancode];
 }
 
-bool IsMouseButtonPressed(const int button) {
+bool is_mouse_button_pressed(const int button) {
     return mouse_pressed[button];
 }
 
-Vector2 GetMousePosition(void) {
+vector2 get_mouse_position(void) {
     int x, y;
     SDL_GetMouseState(&x, &y);
-    return (Vector2){(float)x, (float)y};
+    return (vector2){(float)x, (float)y};
 }
 
-static int GetRandomValueInternal(const int min, const int max) {
+static int get_random_value_internal(const int min, const int max) {
     if (min > max) {
         const int tmp = max;
         const int max_tmp = min;
         const int min_tmp = tmp;
-        return GetRandomValueInternal(min_tmp, max_tmp);
+        return get_random_value_internal(min_tmp, max_tmp);
     }
 
     if (rprand_state == 0) {
@@ -318,8 +318,8 @@ static int GetRandomValueInternal(const int min, const int max) {
     return min + (int)((rprand_state >> 16) % (unsigned int)(max - min + 1));
 }
 
-int GetRandomValue(const int min, const int max) {
-    return GetRandomValueInternal(min, max);
+int get_random_value(const int min, const int max) {
+    return get_random_value_internal(min, max);
 }
 
 static SDL_Surface* scale_surface(SDL_Surface* const src, const int new_width, const int new_height) {
@@ -347,14 +347,14 @@ static SDL_Surface* scale_surface(SDL_Surface* const src, const int new_width, c
     return scaled;
 }
 
-void SetMouseCursor(const char* const fileName) {
-    SDL_Surface* const surface = IMG_Load(fileName);
+void set_mouse_cursor(const char* const file_name) {
+    SDL_Surface* const surface = IMG_Load(file_name);
     if (!surface) {
-        fprintf(stderr, "ERROR: Failed to load cursor %s: %s\n", fileName, IMG_GetError());
+        fprintf(stderr, "ERROR: Failed to load cursor %s: %s\n", file_name, IMG_GetError());
         return;
     }
 
-    const int cursor_size = 32;
+    constexpr int cursor_size = 32;
     SDL_Surface* const scaled = scale_surface(surface, cursor_size, cursor_size);
     SDL_FreeSurface(surface);
 
@@ -378,14 +378,14 @@ void SetMouseCursor(const char* const fileName) {
     SDL_SetCursor(cursor_normal);
 }
 
-void set_mouse_pointer(const char* const fileName) {
-    SDL_Surface* const surface = IMG_Load(fileName);
+void set_mouse_pointer(const char* const file_name) {
+    SDL_Surface* const surface = IMG_Load(file_name);
     if (!surface) {
-        fprintf(stderr, "ERROR: Failed to load pointer cursor %s: %s\n", fileName, IMG_GetError());
+        fprintf(stderr, "ERROR: Failed to load pointer cursor %s: %s\n", file_name, IMG_GetError());
         return;
     }
 
-    const int cursor_size = 32;
+    constexpr int cursor_size = 32;
     SDL_Surface* const scaled = scale_surface(surface, cursor_size, cursor_size);
     SDL_FreeSurface(surface);
 
@@ -403,34 +403,33 @@ void set_mouse_pointer(const char* const fileName) {
 
     if (!cursor_pointer) {
         fprintf(stderr, "ERROR: Failed to create pointer cursor: %s\n", SDL_GetError());
-        return;
     }
 }
 
-void UseNormalCursor(void) {
+void use_normal_cursor(void) {
     if (cursor_normal) {
         SDL_SetCursor(cursor_normal);
     }
 }
 
-void UsePointerCursor(void) {
+void use_pointer_cursor(void) {
     if (cursor_pointer) {
         SDL_SetCursor(cursor_pointer);
     }
 }
 
-void ShowCursor(void) {
+void show_cursor(void) {
     SDL_ShowCursor(SDL_ENABLE);
 }
 
-void HideCursor(void) {
+void hide_cursor(void) {
     SDL_ShowCursor(SDL_DISABLE);
 }
 
-void SetWindowIcon(const char* const fileName) {
-    SDL_Surface* const surface = IMG_Load(fileName);
+void set_window_icon(const char* const file_name) {
+    SDL_Surface* const surface = IMG_Load(file_name);
     if (!surface) {
-        fprintf(stderr, "ERROR: Failed to load icon %s: %s\n", fileName, IMG_GetError());
+        fprintf(stderr, "ERROR: Failed to load icon %s: %s\n", file_name, IMG_GetError());
         return;
     }
 

@@ -5,14 +5,13 @@
 #include "projectile.h"
 #include "game.h"
 #include <math.h>
-#include <stdio.h>
 
 #define PROJECTILE_SPEED 10.0f
 #define ICEBALL_FRAMES 10
 #define ICEBALL_FRAME_DURATION 0.05f
 
-GAME_OBJECT create_projectile(Vector2 start_pos, Vector2 target_pos, float damage, int owner_id, int target_id) {
-    Vector2 direction = {
+game_object create_projectile(const vector2 start_pos, const vector2 target_pos, const float damage, const int owner_id, const int target_id) {
+    vector2 direction = {
         target_pos.x - start_pos.x,
         target_pos.y - start_pos.y
     };
@@ -23,13 +22,13 @@ GAME_OBJECT create_projectile(Vector2 start_pos, Vector2 target_pos, float damag
         direction.y /= length;
     }
 
-    const Vector2 velocity = {
+    const vector2 velocity = {
         direction.x * PROJECTILE_SPEED,
         direction.y * PROJECTILE_SPEED
     };
 
-    return (GAME_OBJECT) {
-        .type = PROJECTILE,
+    return (game_object) {
+        .type = projectile,
         .position = start_pos,
         .is_active = true,
         .data.projectile = {
@@ -44,7 +43,7 @@ GAME_OBJECT create_projectile(Vector2 start_pos, Vector2 target_pos, float damag
     };
 }
 
-void update_projectile(const GAME *game, GAME_OBJECT *projectile, const float delta_time) {
+void update_projectile(const game *game, game_object *projectile, const float delta_time) {
     if (game == nullptr || projectile == nullptr || game->game_objects == nullptr) return;
 
     if (!projectile->is_active) {
@@ -61,16 +60,16 @@ void update_projectile(const GAME *game, GAME_OBJECT *projectile, const float de
     }
 
     const int target_id = projectile->data.projectile.target_id;
-    GAME_OBJECT* target = nullptr;
+    game_object* target = nullptr;
 
     for (size_t i = 0; i < game->object_count; i++) {
-        GAME_OBJECT* obj = &game->game_objects[i];
+        game_object* obj = &game->game_objects[i];
 
-        if (obj->type != ENEMY || obj->id != target_id) {
+        if (obj->type != enemy || obj->id != target_id) {
             continue;
         }
 
-        if (obj->is_active && obj->data.enemy.anim_state != ENEMY_ANIM_DIE) {
+        if (obj->is_active && obj->data.enemy.anim_state != enemy_anim_die) {
             target = obj;
             break;
         }
@@ -107,7 +106,7 @@ void update_projectile(const GAME *game, GAME_OBJECT *projectile, const float de
             target->data.enemy.health -= projectile->data.projectile.damage;
 
             if (target->data.enemy.health > 0) {
-                target->data.enemy.anim_state = ENEMY_ANIM_HIT;
+                target->data.enemy.anim_state = enemy_anim_hit;
                 target->data.enemy.current_frame = 0;
                 target->data.enemy.frame_timer = 0.0f;
             }
@@ -118,9 +117,9 @@ void update_projectile(const GAME *game, GAME_OBJECT *projectile, const float de
     }
 
     for (size_t i = 0; i < game->object_count; i++) {
-        GAME_OBJECT* obj = &game->game_objects[i];
+        game_object* obj = &game->game_objects[i];
 
-        if (obj->type != ENEMY || !obj->is_active || obj->data.enemy.anim_state == ENEMY_ANIM_DIE) {
+        if (obj->type != enemy || !obj->is_active || obj->data.enemy.anim_state == enemy_anim_die) {
             continue;
         }
 
@@ -139,7 +138,7 @@ void update_projectile(const GAME *game, GAME_OBJECT *projectile, const float de
             obj->data.enemy.health -= projectile->data.projectile.damage;
 
             if (obj->data.enemy.health > 0) {
-                obj->data.enemy.anim_state = ENEMY_ANIM_HIT;
+                obj->data.enemy.anim_state = enemy_anim_hit;
                 obj->data.enemy.current_frame = 0;
                 obj->data.enemy.frame_timer = 0.0f;
             }

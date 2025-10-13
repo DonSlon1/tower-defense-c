@@ -2,23 +2,23 @@
 #include <stdio.h>
 #include <math.h>
 
-constexpr int MUSHROOM_RUN_FRAMES = 8;
-constexpr int MUSHROOM_HIT_FRAMES = 5;
-constexpr int MUSHROOM_DIE_FRAMES = 15;
-constexpr int FLYING_FLY_FRAMES = 8;
-constexpr int FLYING_HIT_FRAMES = 4;
-constexpr int FLYING_DIE_FRAMES = 17;
-constexpr float ANIM_FRAME_DURATION = 0.1f;
-constexpr float WAYPOINT_REACHED_THRESHOLD = 0.01f;
+constexpr int mushroom_run_frames = 8;
+constexpr int mushroom_hit_frames = 5;
+constexpr int mushroom_die_frames = 15;
+constexpr int flying_fly_frames = 8;
+constexpr int flying_hit_frames = 4;
+constexpr int flying_die_frames = 17;
+constexpr float anim_frame_duration = 0.1f;
+constexpr float waypoint_reached_threshold = 0.01f;
 
-static constexpr Vector2 path_0_waypoints[] = {
+static constexpr vector2 path_0_waypoints[] = {
     {0, 2},
     {19, 2},
     {19, 7},
     {24, 7}
 };
 
-static constexpr Vector2 path_1_waypoints[] = {
+static constexpr vector2 path_1_waypoints[] = {
     {0, 15},
     {19, 15},
     {19, 10},
@@ -28,34 +28,34 @@ static constexpr Vector2 path_1_waypoints[] = {
 static constexpr int path_0_count = sizeof(path_0_waypoints) / sizeof(path_0_waypoints[0]);
 static constexpr int path_1_count = sizeof(path_1_waypoints) / sizeof(path_1_waypoints[0]);
 
-static const Vector2* const paths[] = { path_0_waypoints, path_1_waypoints };
+static const vector2* const paths[] = { path_0_waypoints, path_1_waypoints };
 static constexpr int path_counts[] = { path_0_count, path_1_count };
 
-ENEMY_STATS get_enemy_stats(const ENEMY_TYPE type) {
+enemy_stats get_enemy_stats(const enemy_type type) {
     switch (type) {
-        case ENEMY_TYPE_MUSHROOM:
-            return (ENEMY_STATS) { .health = 80.0f, .speed = 1.5f, .gold_reward = 25 };
-        case ENEMY_TYPE_FLYING:
-            return (ENEMY_STATS) { .health = 50.0f, .speed = 3.5f, .gold_reward = 15 };
+        case enemy_type_mushroom:
+            return (enemy_stats) { .health = 80.0f, .speed = 1.5f, .gold_reward = 25 };
+        case enemy_type_flying:
+            return (enemy_stats) { .health = 50.0f, .speed = 3.5f, .gold_reward = 15 };
         default:
-            return (ENEMY_STATS) { .health = 80.0f, .speed = 1.5f, .gold_reward = 25 };
+            return (enemy_stats) { .health = 80.0f, .speed = 1.5f, .gold_reward = 25 };
     }
 }
 
-int get_enemy_frame_count(const ENEMY_TYPE type, const ENEMY_ANIMATION_STATE state) {
+int get_enemy_frame_count(const enemy_type type, const enemy_animation_state state) {
     switch (type) {
-        case ENEMY_TYPE_MUSHROOM:
+        case enemy_type_mushroom:
             switch (state) {
-                case ENEMY_ANIM_RUN: return MUSHROOM_RUN_FRAMES;
-                case ENEMY_ANIM_HIT: return MUSHROOM_HIT_FRAMES;
-                case ENEMY_ANIM_DIE: return MUSHROOM_DIE_FRAMES;
+                case enemy_anim_run: return mushroom_run_frames;
+                case enemy_anim_hit: return mushroom_hit_frames;
+                case enemy_anim_die: return mushroom_die_frames;
             }
             break;
-        case ENEMY_TYPE_FLYING:
+        case enemy_type_flying:
             switch (state) {
-                case ENEMY_ANIM_RUN: return FLYING_FLY_FRAMES;
-                case ENEMY_ANIM_HIT: return FLYING_HIT_FRAMES;
-                case ENEMY_ANIM_DIE: return FLYING_DIE_FRAMES;
+                case enemy_anim_run: return flying_fly_frames;
+                case enemy_anim_hit: return flying_hit_frames;
+                case enemy_anim_die: return flying_die_frames;
             }
             break;
         default:
@@ -64,25 +64,25 @@ int get_enemy_frame_count(const ENEMY_TYPE type, const ENEMY_ANIMATION_STATE sta
     return 1;
 }
 
-void update_enemy_animation(GAME_OBJECT* const enemy, const float delta_time) {
+void update_enemy_animation(game_object* const enemy, const float delta_time) {
     if (enemy == nullptr) return;
 
     enemy->data.enemy.frame_timer += delta_time;
 
-    if (enemy->data.enemy.frame_timer >= ANIM_FRAME_DURATION) {
+    if (enemy->data.enemy.frame_timer >= anim_frame_duration) {
         enemy->data.enemy.frame_timer = 0.0f;
         enemy->data.enemy.current_frame++;
 
         const int max_frames = get_enemy_frame_count(enemy->data.enemy.type, enemy->data.enemy.anim_state);
 
-        if (enemy->data.enemy.anim_state == ENEMY_ANIM_DIE) {
+        if (enemy->data.enemy.anim_state == enemy_anim_die) {
             if (enemy->data.enemy.current_frame >= max_frames) {
                 enemy->data.enemy.current_frame = max_frames - 1;
                 enemy->is_active = false;
             }
-        } else if (enemy->data.enemy.anim_state == ENEMY_ANIM_HIT) {
+        } else if (enemy->data.enemy.anim_state == enemy_anim_hit) {
             if (enemy->data.enemy.current_frame >= max_frames) {
-                enemy->data.enemy.anim_state = ENEMY_ANIM_RUN;
+                enemy->data.enemy.anim_state = enemy_anim_run;
                 enemy->data.enemy.current_frame = 0;
             }
         } else {
@@ -93,7 +93,7 @@ void update_enemy_animation(GAME_OBJECT* const enemy, const float delta_time) {
     }
 }
 
-void update_enemy(GAME_OBJECT* const enemy, const float delta_time) {
+void update_enemy(game_object* const enemy, const float delta_time) {
     if (enemy == nullptr) return;
 
     if (!enemy->is_active) {
@@ -102,12 +102,12 @@ void update_enemy(GAME_OBJECT* const enemy, const float delta_time) {
 
     update_enemy_animation(enemy, delta_time);
 
-    if (enemy->data.enemy.anim_state == ENEMY_ANIM_DIE) {
+    if (enemy->data.enemy.anim_state == enemy_anim_die) {
         return;
     }
 
     if (enemy->data.enemy.health <= 0) {
-        enemy->data.enemy.anim_state = ENEMY_ANIM_DIE;
+        enemy->data.enemy.anim_state = enemy_anim_die;
         enemy->data.enemy.current_frame = 0;
         enemy->data.enemy.frame_timer = 0.0f;
         return;
@@ -121,22 +121,22 @@ void update_enemy(GAME_OBJECT* const enemy, const float delta_time) {
     }
 
     const int waypoint_count = path_counts[path_id];
-    const Vector2* const current_path = paths[path_id];
+    const vector2* const current_path = paths[path_id];
 
     if (enemy->data.enemy.waypoint_index >= waypoint_count) {
         enemy->is_active = false;
         return;
     }
 
-    const Vector2 target_pos = current_path[enemy->data.enemy.waypoint_index];
-    const Vector2 direction = {
+    const vector2 target_pos = current_path[enemy->data.enemy.waypoint_index];
+    const vector2 direction = {
         target_pos.x - enemy->position.x,
         target_pos.y - enemy->position.y
     };
 
     const float distance = sqrtf(direction.x * direction.x + direction.y * direction.y);
 
-    if (distance < WAYPOINT_REACHED_THRESHOLD) {
+    if (distance < waypoint_reached_threshold) {
         enemy->position = target_pos;
         enemy->data.enemy.waypoint_index++;
     } else {
@@ -160,12 +160,12 @@ void update_enemy(GAME_OBJECT* const enemy, const float delta_time) {
     }
 }
 
-SPRITE_INFO get_enemy_sprites(const ENEMY_TYPE type, const ENEMY_ANIMATION_STATE state) {
-    SPRITE_INFO info = { .sprites = nullptr, .count = 0, .width = 1, .height = 1 };
+sprite_info get_enemy_sprites(const enemy_type type, const enemy_animation_state state) {
+    sprite_info info = { .sprites = nullptr, .count = 0, .width = 1, .height = 1 };
 
     switch (type) {
-        case ENEMY_TYPE_MUSHROOM:
-        case ENEMY_TYPE_FLYING:
+        case enemy_type_mushroom:
+        case enemy_type_flying:
             info.count = get_enemy_frame_count(type, state);
             break;
         default:
@@ -176,6 +176,6 @@ SPRITE_INFO get_enemy_sprites(const ENEMY_TYPE type, const ENEMY_ANIMATION_STATE
     return info;
 }
 
-Vector2 get_path_start_position(const int path_id) {
+vector2 get_path_start_position(const int path_id) {
     return path_id == 0 ? path_0_waypoints[0] : path_1_waypoints[0];
 }
