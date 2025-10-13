@@ -71,6 +71,9 @@ Vector2 GetMousePosition(void);
 int GetRandomValue(int min, int max);
 
 void SetMouseCursor(const char* fileName);
+void SetMousePointer(const char* fileName);
+void UseNormalCursor(void);
+void UsePointerCursor(void);
 void ShowCursor(void);
 void HideCursor(void);
 

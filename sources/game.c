@@ -13,6 +13,15 @@
 void handle_playing_input(GAME *game) {
     const GRID_COORD grid_pos = screen_to_grid(GetMousePosition(), &game->tilemap);
 
+    const GAME_OBJECT* hovered_tower = find_tower_at_grid(game, grid_pos);
+    const int spot_index = find_tower_spot_at_grid(game, grid_pos);
+
+    if (hovered_tower != nullptr || spot_index >= 0) {
+        UsePointerCursor();
+    } else {
+        UseNormalCursor();
+    }
+
     if (IsMouseButtonPressed(MOUSE_BUTTON_LEFT)) {
         const UPGRADE_RESULT result = upgrade_clicked_tower(game, grid_pos);
         switch (result) {
@@ -26,7 +35,6 @@ void handle_playing_input(GAME *game) {
                 printf("Tower is already at max level\n");
                 break;
             case UPGRADE_NOT_FOUND:
-                const int spot_index = find_tower_spot_at_grid(game, grid_pos);
                 if (spot_index >= 0) {
                     try_build_tower(game, spot_index);
                 }

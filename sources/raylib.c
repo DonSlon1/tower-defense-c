@@ -15,7 +15,8 @@ static int screen_height = 0;
 static int target_fps = 60;
 static TTF_Font* default_font = nullptr;
 static unsigned int rprand_state = 0;
-static SDL_Cursor* custom_cursor = nullptr;
+static SDL_Cursor* cursor_normal = nullptr;
+static SDL_Cursor* cursor_pointer = nullptr;
 
 void InitWindow(const int width, const int height, const char* const title) {
     if (SDL_Init(SDL_INIT_VIDEO) < 0) {
@@ -71,7 +72,8 @@ void SetTargetFPS(const int fps) {
 }
 
 void CloseWindow(void) {
-    if (custom_cursor) SDL_FreeCursor(custom_cursor);
+    if (cursor_normal) SDL_FreeCursor(cursor_normal);
+    if (cursor_pointer) SDL_FreeCursor(cursor_pointer);
     if (default_font) TTF_CloseFont(default_font);
     free(keys_pressed);
     free(mouse_pressed);
@@ -320,6 +322,31 @@ int GetRandomValue(const int min, const int max) {
     return GetRandomValueInternal(min, max);
 }
 
+static SDL_Surface* scale_surface(SDL_Surface* const src, const int new_width, const int new_height) {
+    SDL_Surface* const scaled = SDL_CreateRGBSurfaceWithFormat(0, new_width, new_height, 32, src->format->format);
+    if (!scaled) return nullptr;
+
+    const double x_ratio = (double)src->w / new_width;
+    const double y_ratio = (double)src->h / new_height;
+
+    SDL_LockSurface(src);
+    SDL_LockSurface(scaled);
+
+    for (int y = 0; y < new_height; y++) {
+        for (int x = 0; x < new_width; x++) {
+            const int src_x = (int)(x * x_ratio);
+            const int src_y = (int)(y * y_ratio);
+            const Uint32 pixel = ((Uint32*)src->pixels)[src_y * src->w + src_x];
+            ((Uint32*)scaled->pixels)[y * new_width + x] = pixel;
+        }
+    }
+
+    SDL_UnlockSurface(scaled);
+    SDL_UnlockSurface(src);
+
+    return scaled;
+}
+
 void SetMouseCursor(const char* const fileName) {
     SDL_Surface* const surface = IMG_Load(fileName);
     if (!surface) {
@@ -327,19 +354,69 @@ void SetMouseCursor(const char* const fileName) {
         return;
     }
 
-    if (custom_cursor) {
-        SDL_FreeCursor(custom_cursor);
-    }
-
-    custom_cursor = SDL_CreateColorCursor(surface, 0, 0);
+    const int cursor_size = 32;
+    SDL_Surface* const scaled = scale_surface(surface, cursor_size, cursor_size);
     SDL_FreeSurface(surface);
 
-    if (!custom_cursor) {
+    if (!scaled) {
+        fprintf(stderr, "ERROR: Failed to scale cursor\n");
+        return;
+    }
+
+    if (cursor_normal) {
+        SDL_FreeCursor(cursor_normal);
+    }
+
+    cursor_normal = SDL_CreateColorCursor(scaled, 0, 0);
+    SDL_FreeSurface(scaled);
+
+    if (!cursor_normal) {
         fprintf(stderr, "ERROR: Failed to create cursor: %s\n", SDL_GetError());
         return;
     }
 
-    SDL_SetCursor(custom_cursor);
+    SDL_SetCursor(cursor_normal);
+}
+
+void SetMousePointer(const char* const fileName) {
+    SDL_Surface* const surface = IMG_Load(fileName);
+    if (!surface) {
+        fprintf(stderr, "ERROR: Failed to load pointer cursor %s: %s\n", fileName, IMG_GetError());
+        return;
+    }
+
+    const int cursor_size = 32;
+    SDL_Surface* const scaled = scale_surface(surface, cursor_size, cursor_size);
+    SDL_FreeSurface(surface);
+
+    if (!scaled) {
+        fprintf(stderr, "ERROR: Failed to scale pointer cursor\n");
+        return;
+    }
+
+    if (cursor_pointer) {
+        SDL_FreeCursor(cursor_pointer);
+    }
+
+    cursor_pointer = SDL_CreateColorCursor(scaled, 0, 0);
+    SDL_FreeSurface(scaled);
+
+    if (!cursor_pointer) {
+        fprintf(stderr, "ERROR: Failed to create pointer cursor: %s\n", SDL_GetError());
+        return;
+    }
+}
+
+void UseNormalCursor(void) {
+    if (cursor_normal) {
+        SDL_SetCursor(cursor_normal);
+    }
+}
+
+void UsePointerCursor(void) {
+    if (cursor_pointer) {
+        SDL_SetCursor(cursor_pointer);
+    }
 }
 
 void ShowCursor(void) {
