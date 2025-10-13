@@ -8,6 +8,7 @@ include(FetchContent)
 set(FETCHCONTENT_QUIET FALSE)
 set(BUILD_EXAMPLES OFF CACHE BOOL "" FORCE) # don't build the supplied examples
 set(BUILD_GAMES    OFF CACHE BOOL "" FORCE) # don't build the supplied example games
+set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fsanitize=address")
 
 FetchContent_Declare(
         raylib

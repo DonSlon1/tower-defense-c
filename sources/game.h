@@ -20,6 +20,9 @@
 #define TOWER_LEVEL_0_HEIGHT 4
 #define TOWER_LEVEL_0_UPGRADE_COST 100
 
+// Enemy default data
+#define ENEMY_DEFAULT_TIMER 1.f
+
 
 typedef enum {
     TOWER,
@@ -35,6 +38,14 @@ typedef enum {
 } TOWER_LEVEL;
 
 typedef enum {
+    ENEMY_TYPE_SCOUT,
+    ENEMY_TYPE_NORMAL,
+    ENEMY_TYPE_TANK,
+    ENEMY_TYPE_SPEEDY,
+    ENEMY_TYPE_COUNT
+} ENEMY_TYPE;
+
+typedef enum {
     UPGRADE_SUCCESS,
     UPGRADE_INSUFFICIENT_FUNDS,
     UPGRADE_MAX_LEVEL,
@@ -46,7 +57,7 @@ typedef struct {
     int count;
     int width;
     int height;
-} TowerSpriteInfo;
+} SPRITE_INFO;
 
 typedef struct {
     int x;
@@ -68,8 +79,11 @@ typedef struct {
 
 typedef struct {
     float health;
+    float max_health;
     float speed;
     int waypoint_index;
+    int path_id;
+    ENEMY_TYPE type;
 } ENEMY_DATA;
 
 typedef struct {
@@ -82,6 +96,7 @@ typedef struct {
     int id;
     OBJECT_TYPE type;
     Vector2 position;
+    bool is_active;
 
     union {
         TOWER_DATA tower;
@@ -93,6 +108,7 @@ typedef struct {
 
 typedef struct {
     Texture2D towers;
+    Texture2D enemies;
 } ASSETS;
 
 typedef struct {
@@ -106,7 +122,7 @@ typedef struct {
     int player_lives;
     int player_money;
     int next_id;
-
+    float enemy_spawn_timer;
 } GAME;
 
 GAME init_game();
@@ -118,7 +134,11 @@ GAME_OBJECT init_tower(Vector2 position);
 GRID_COORD screen_to_grid(Vector2 screen_pos, const TILE_MAP* tilemap);
 int get_game_objects_of_type(const GAME *game, OBJECT_TYPE type, GAME_OBJECT **out_objects);
 UPGRADE_RESULT upgrade_clicked_tower(GAME *game, GRID_COORD grid_coord);
-TowerSpriteInfo get_tower_sprites(TOWER_LEVEL level);
+SPRITE_INFO get_tower_sprites(TOWER_LEVEL level);
+SPRITE_INFO get_enemy_sprites(ENEMY_TYPE type);
+void update_game_state(GAME *game, float delta_time);
+void update_enemy(GAME_OBJECT *enemy,float delta_time);
+void remove_inactive_objects(GAME *game);
 void draw_game_objects(const GAME* game);
 
 #endif //PROJEKT_GAME_H
