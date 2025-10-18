@@ -1,7 +1,6 @@
 #ifndef NETWORK_H
 #define NETWORK_H
 
-#include <stdbool.h>
 #include <stdint.h>
 
 // Maximum message size
@@ -9,16 +8,16 @@
 
 // Message types for multiplayer communication
 typedef enum {
-    MSG_PING = 1,              // Heartbeat
-    MSG_TOWER_BUILD,           // Player built a tower
-    MSG_TOWER_UPGRADE,         // Player upgraded a tower
-    MSG_SEND_ENEMIES,          // Player sends enemies to opponent
-    MSG_WAVE_COMPLETE,         // Player completed their wave (all enemies dead)
-    MSG_WAVE_START,            // Both players ready - start next wave
-    MSG_GAME_SYNC,             // Sync game state
-    MSG_DISCONNECT,            // Player leaving
-    MSG_DISCOVER_REQUEST,      // Broadcast to find sessions
-    MSG_DISCOVER_RESPONSE,     // Response from a host with session info
+    msg_ping = 1,              // Heartbeat
+    msg_tower_build,           // Player built a tower
+    msg_tower_upgrade,         // Player upgraded a tower
+    msg_send_enemies,          // Player sends enemies to opponent
+    msg_wave_complete,         // Player completed their wave (all enemies dead)
+    msg_wave_start,            // Both players ready - start next wave
+    msg_game_sync,             // Sync game state
+    msg_disconnect,            // Player leaving
+    msg_discover_request,      // Broadcast to find sessions
+    msg_discover_response,     // Response from a host with session info
 } message_type;
 
 // Network message structure

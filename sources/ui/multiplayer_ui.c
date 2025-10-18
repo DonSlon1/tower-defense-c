@@ -14,11 +14,11 @@ multiplayer_ui init_multiplayer_ui(const bool is_host, const int window_width, c
     ui.game_height = window_height;
 
     // Initialize enemy send buttons (positioned at bottom of left game view)
-    const int button_width = 120;
-    const int button_height = 40;
-    const int button_spacing = 10;
+    constexpr int button_width = 120;
+    constexpr int button_height = 40;
+    constexpr int button_spacing = 10;
     const int button_y = window_height - 60;
-    const int start_x = 20;
+    constexpr int start_x = 20;
 
     // Send 1 enemy ($50)
     ui.send_buttons[0] = (send_enemy_button){
@@ -74,11 +74,10 @@ void update_multiplayer_ui_dimensions(multiplayer_ui* ui, const int window_width
     ui->game_height = window_height;
 
     // Update button positions based on new window size
-    const int button_width = 120;
-    const int button_height = 40;
-    const int button_spacing = 10;
+    constexpr int button_width = 120;
+    constexpr int button_spacing = 10;
     const int button_y = window_height - 60;
-    const int start_x = 20;
+    constexpr int start_x = 20;
 
     ui->send_buttons[0].position = (vector2){start_x, button_y};
     ui->send_buttons[1].position = (vector2){start_x + button_width + button_spacing, button_y};
@@ -100,7 +99,7 @@ void update_multiplayer_ui(multiplayer_ui* ui) {
 
 // Render split-screen UI elements (divider and labels)
 // Note: Actual game rendering is done in main.c using SDL viewports
-void render_split_screen(const multiplayer_ui* ui, const game* local_game, const game* remote_game) {
+void render_split_screen(const multiplayer_ui* ui, [[maybe_unused]] const game* local_game, [[maybe_unused]] const game* remote_game) {
     if (!ui) return;
 
     // Draw dividing line (vertical line using thin rectangle)
@@ -116,7 +115,7 @@ static void render_send_button(const send_enemy_button* button, const bool can_a
     // Choose color based on state
     color button_color;
     if (!can_afford) {
-        button_color = (color){60, 60, 60, 255};  // Gray if can't afford
+        button_color = (color){60, 60, 60, 255};  // Gray if user can't afford
     } else if (button->hovered) {
         button_color = (color){100, 150, 100, 255};  // Light green on hover
     } else {
@@ -154,7 +153,7 @@ void render_enemy_send_ui(const multiplayer_ui* ui, const game* local_game) {
     if (!ui || !local_game) return;
 
     // Draw background panel
-    const color panel_color = (color){30, 30, 40, 200};
+    const auto panel_color = (color){30, 30, 40, 200};
     draw_rectangle(0, ui->game_height - 70, ui->game_width, 70, panel_color);
 
     // Draw label

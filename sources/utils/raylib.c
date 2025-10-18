@@ -79,7 +79,7 @@ void set_window_size(const int width, const int height) {
 
 void set_viewport(const int x, const int y, const int width, const int height) {
     if (renderer) {
-        SDL_Rect viewport = {x, y, width, height};
+        const SDL_Rect viewport = {x, y, width, height};
         SDL_RenderSetViewport(renderer, &viewport);
     }
 }
@@ -365,6 +365,7 @@ int get_random_value(const int min, const int max) {
     return get_random_value_internal(min, max);
 }
 
+// ReSharper disable CppDFAConstantParameter
 static SDL_Surface* scale_surface(SDL_Surface* const src, const int new_width, const int new_height) {
     SDL_Surface* const scaled = SDL_CreateRGBSurfaceWithFormat(0, new_width, new_height, 32, src->format->format);
     if (!scaled) return nullptr;

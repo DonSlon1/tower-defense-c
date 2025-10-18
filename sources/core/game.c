@@ -28,9 +28,7 @@ void handle_playing_input(game *game) {
         const upgrade_result result = upgrade_clicked_tower(game, grid_pos);
         switch (result) {
             case upgrade_success:
-                break;
             case upgrade_insufficient_funds:
-                break;
             case upgrade_max_level:
                 break;
             case upgrade_not_found:

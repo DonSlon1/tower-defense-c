@@ -35,7 +35,7 @@ network_state* network_create_host(const uint16_t port) {
     }
 
     // Open server socket
-    TCPsocket server = SDLNet_TCP_Open(&ip);
+    const TCPsocket server = SDLNet_TCP_Open(&ip);
     if (!server) {
         fprintf(stderr, "ERROR: SDLNet_TCP_Open failed: %s\n", SDLNet_GetError());
         free(net);
@@ -228,7 +228,7 @@ network_message network_create_message(const message_type type, const void* data
 // Session discovery implementation
 
 #define DISCOVERY_PORT 47777
-#define DISCOVERY_MAGIC 0x54445344  // "TDSD" = Tower Defense Session Discovery
+#define DISCOVERY_MAGIC 0x54445344  // Tower Defense Session Discovery
 
 struct session_discovery {
     UDPsocket socket;
@@ -289,7 +289,7 @@ void discovery_host_update(session_discovery* disc) {
     // Check for discovery requests (non-blocking)
     if (SDLNet_UDP_Recv(disc->socket, disc->packet) > 0) {
         if (disc->packet->len == sizeof(discovery_packet)) {
-            const discovery_packet* request = (const discovery_packet*)disc->packet->data;
+            const auto request = (const discovery_packet*)disc->packet->data;
 
             // Check if this is a valid discovery request
             if (request->magic == DISCOVERY_MAGIC && request->message_type == 0) {
@@ -316,7 +316,7 @@ int discovery_find_sessions(session_discovery* disc, discovered_session* session
     if (!disc || !sessions || max_sessions <= 0) return 0;
 
     // Send broadcast request
-    discovery_packet request = {
+    const discovery_packet request = {
         .magic = DISCOVERY_MAGIC,
         .message_type = 0,  // Request
         .host_name = "",
@@ -340,7 +340,7 @@ int discovery_find_sessions(session_discovery* disc, discovered_session* session
     while (SDL_GetTicks() - start_time < timeout_ms && session_count < max_sessions) {
         if (SDLNet_UDP_Recv(disc->socket, disc->packet) > 0) {
             if (disc->packet->len == sizeof(discovery_packet)) {
-                discovery_packet* response = (discovery_packet*)disc->packet->data;
+                const discovery_packet* response = (discovery_packet*)disc->packet->data;
 
                 // Verify magic number and response type
                 if (response->magic == DISCOVERY_MAGIC && response->message_type == 1) {
@@ -349,9 +349,9 @@ int discovery_find_sessions(session_discovery* disc, discovered_session* session
                     snprintf(sessions[session_count].ip_address,
                             sizeof(sessions[session_count].ip_address),
                             "%u.%u.%u.%u",
-                            (ip >> 24) & 0xFF,
-                            (ip >> 16) & 0xFF,
-                            (ip >> 8) & 0xFF,
+                            ip >> 24 & 0xFF,
+                            ip >> 16 & 0xFF,
+                            ip >> 8 & 0xFF,
                             ip & 0xFF);
 
                     strncpy(sessions[session_count].host_name, response->host_name,

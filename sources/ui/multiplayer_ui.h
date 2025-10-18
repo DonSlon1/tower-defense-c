@@ -1,11 +1,12 @@
 #ifndef MULTIPLAYER_UI_H
 #define MULTIPLAYER_UI_H
 
-#include <stdbool.h>
 #include "raylib.h"
 
 // Forward declarations
+// ReSharper disable once CppRedundantElaboratedTypeSpecifier
 typedef struct game game;
+// ReSharper disable once CppRedundantElaboratedTypeSpecifier
 typedef struct network_state network_state;
 
 // Enemy sending button

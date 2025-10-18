@@ -3,20 +3,19 @@
 
 #include "raylib.h"
 #include "../network/network.h"
-#include <stdbool.h>
 
 // Menu states - tracks which screen we're on
 typedef enum {
-    MENU_STATE_MAIN,                    // Main menu: Single/Multi/Quit
-    MENU_STATE_MULTIPLAYER_SELECT,      // Multiplayer: Host/Join/Back
-    MENU_STATE_HOST_SETUP,              // Configure host settings (port, name)
-    MENU_STATE_HOST_WAITING,            // Waiting for player to connect
-    MENU_STATE_JOIN_SELECTING_GAME,     // Browse discovered games (with discovery)
-    MENU_STATE_JOIN_ENTERING_IP,        // Manual IP entry
-    MENU_STATE_CONNECTING,              // Attempting to connect
-    MENU_STATE_PLAYING_SINGLE,          // Single player game active
-    MENU_STATE_PLAYING_MULTIPLAYER,     // Multiplayer game active
-    MENU_STATE_QUIT                     // Quit application
+    menu_state_main,                    // Main menu: Single/Multi/Quit
+    menu_state_multiplayer_select,      // Multiplayer: Host/Join/Back
+    menu_state_host_setup,              // Configure host settings (port, name)
+    menu_state_host_waiting,            // Waiting for player to connect
+    menu_state_join_selecting_game,     // Browse discovered games (with discovery)
+    menu_state_join_entering_ip,        // Manual IP entry
+    menu_state_connecting,              // Attempting to connect
+    menu_state_playing_single,          // Single player game active
+    menu_state_playing_multiplayer,     // Multiplayer game active
+    menu_state_quit                     // Quit application
 } menu_state;
 
 // Button structure for UI elements

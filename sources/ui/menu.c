@@ -10,10 +10,10 @@ static void update_button(menu_button* btn) {
 
     const vector2 mouse = get_mouse_position();
 
-    btn->hovered = (mouse.x >= btn->position.x &&
+    btn->hovered = mouse.x >= btn->position.x &&
                    mouse.x <= btn->position.x + btn->size.x &&
                    mouse.y >= btn->position.y &&
-                   mouse.y <= btn->position.y + btn->size.y);
+                   mouse.y <= btn->position.y + btn->size.y;
 
     btn->clicked = btn->hovered && is_mouse_button_pressed(mouse_button_left);
 }
@@ -58,7 +58,7 @@ static void render_button(const menu_button* btn) {
 // Initialize menu system
 menu_system init_menu_system(void) {
     menu_system menu = {0};
-    menu.current_state = MENU_STATE_MAIN;
+    menu.current_state = menu_state_main;
 
     // Default values
     strcpy(menu.ip_input, "127.0.0.1");
@@ -163,13 +163,13 @@ static void update_main_menu(menu_system* menu) {
 
     if (menu->main_buttons[0].clicked) {
         // Single Player
-        menu->current_state = MENU_STATE_PLAYING_SINGLE;
+        menu->current_state = menu_state_playing_single;
     } else if (menu->main_buttons[1].clicked) {
         // Multiplayer
-        menu->current_state = MENU_STATE_MULTIPLAYER_SELECT;
+        menu->current_state = menu_state_multiplayer_select;
     } else if (menu->main_buttons[2].clicked) {
         // Quit
-        menu->current_state = MENU_STATE_QUIT;
+        menu->current_state = menu_state_quit;
     }
 }
 
@@ -182,7 +182,7 @@ static void update_multiplayer_menu(menu_system* menu) {
     if (menu->multi_buttons[0].clicked) {
         // Host Game - go to setup screen
         menu->is_host = true;
-        menu->current_state = MENU_STATE_HOST_SETUP;
+        menu->current_state = menu_state_host_setup;
         menu->port_input_active = false;
         menu->host_name_input_active = false;
 
@@ -204,16 +204,16 @@ static void update_multiplayer_menu(menu_system* menu) {
             menu->available_game_count = 0;
         }
 
-        menu->current_state = MENU_STATE_JOIN_SELECTING_GAME;
+        menu->current_state = menu_state_join_selecting_game;
 
     } else if (menu->multi_buttons[2].clicked) {
         // Back
-        menu->current_state = MENU_STATE_MAIN;
+        menu->current_state = menu_state_main;
     }
 }
 
 // Helper: Handle text input for a field
-static void handle_text_input(char* buffer, int* cursor_pos, int max_length, bool (*char_filter)(char)) {
+static void handle_text_input(char* buffer, int* cursor_pos, const int max_length, bool (*char_filter)(char)) {
     // Handle backspace
     if (is_key_pressed(SDLK_BACKSPACE) && *cursor_pos > 0) {
         (*cursor_pos)--;
@@ -238,7 +238,7 @@ static bool is_valid_ip_char(const char c) {
 }
 
 static bool is_valid_port_char(const char c) {
-    return (c >= '0' && c <= '9');
+    return c >= '0' && c <= '9';
 }
 
 static bool is_valid_name_char(const char c) {
@@ -273,14 +273,14 @@ static void update_join_ip_menu(menu_system* menu) {
     if (menu->ip_buttons[0].clicked) {
         // Connect
         stop_text_input();
-        menu->current_state = MENU_STATE_CONNECTING;
+        menu->current_state = menu_state_connecting;
         menu->ip_input_active = false;
         // Network connection will be attempted in main.c
 
     } else if (menu->ip_buttons[1].clicked) {
         // Cancel
         stop_text_input();
-        menu->current_state = MENU_STATE_MULTIPLAYER_SELECT;
+        menu->current_state = menu_state_multiplayer_select;
         menu->ip_input_active = false;
     }
 }
@@ -331,7 +331,7 @@ static void update_host_setup(menu_system* menu) {
         }
 
         menu->waiting_for_player = true;
-        menu->current_state = MENU_STATE_HOST_WAITING;
+        menu->current_state = menu_state_host_waiting;
 
         // Start discovery broadcaster
         menu->discovery = discovery_create(47777);
@@ -342,7 +342,7 @@ static void update_host_setup(menu_system* menu) {
     } else if (menu->host_setup_buttons[1].clicked) {
         // Cancel
         stop_text_input();
-        menu->current_state = MENU_STATE_MULTIPLAYER_SELECT;
+        menu->current_state = menu_state_multiplayer_select;
         menu->port_input_active = false;
         menu->host_name_input_active = false;
     }
@@ -359,7 +359,7 @@ static void update_host_waiting(menu_system* menu) {
 
     if (menu->host_buttons[0].clicked) {
         // Cancel hosting
-        menu->current_state = MENU_STATE_MULTIPLAYER_SELECT;
+        menu->current_state = menu_state_multiplayer_select;
         menu->waiting_for_player = false;
 
         // Stop discovery
@@ -374,7 +374,7 @@ static void update_host_waiting(menu_system* menu) {
 static void update_join_browser(menu_system* menu) {
     // Initialize game buttons based on discovered sessions
     for (int i = 0; i < menu->available_game_count && i < 8; i++) {
-        menu->game_buttons[i].position = (vector2){100, 170 + i * 35};
+        menu->game_buttons[i].position = (vector2){100, 170.f + (float)i * 35};
         menu->game_buttons[i].size = (vector2){600, 30};
         menu->game_buttons[i].text = "";  // We'll draw custom text in render
     }
@@ -414,7 +414,7 @@ static void update_join_browser(menu_system* menu) {
             strncpy(menu->ip_input, menu->available_games[i].ip_address, sizeof(menu->ip_input) - 1);
             menu->ip_input[sizeof(menu->ip_input) - 1] = '\0';
             menu->port_number = menu->available_games[i].port;
-            menu->current_state = MENU_STATE_CONNECTING;
+            menu->current_state = menu_state_connecting;
 
             // Clean up discovery
             if (menu->discovery) {
@@ -425,7 +425,7 @@ static void update_join_browser(menu_system* menu) {
     }
 
     if (menu->manual_ip_button.clicked) {
-        menu->current_state = MENU_STATE_JOIN_ENTERING_IP;
+        menu->current_state = menu_state_join_entering_ip;
         menu->ip_input_active = true;
 
         // Clean up discovery
@@ -436,7 +436,7 @@ static void update_join_browser(menu_system* menu) {
     }
 
     if (menu->back_button.clicked) {
-        menu->current_state = MENU_STATE_MULTIPLAYER_SELECT;
+        menu->current_state = menu_state_multiplayer_select;
 
         // Clean up discovery
         if (menu->discovery) {
@@ -454,7 +454,7 @@ static void update_connecting(menu_system* menu) {
 
     // Allow ESC to cancel
     if (is_key_pressed(SDLK_ESCAPE) || menu->connection_failed) {
-        menu->current_state = MENU_STATE_MULTIPLAYER_SELECT;
+        menu->current_state = menu_state_multiplayer_select;
         menu->connection_failed = false;
     }
 }
@@ -464,31 +464,31 @@ void update_menu(menu_system* menu) {
     if (!menu) return;
 
     switch (menu->current_state) {
-        case MENU_STATE_MAIN:
+        case menu_state_main:
             update_main_menu(menu);
             break;
 
-        case MENU_STATE_MULTIPLAYER_SELECT:
+        case menu_state_multiplayer_select:
             update_multiplayer_menu(menu);
             break;
 
-        case MENU_STATE_HOST_SETUP:
+        case menu_state_host_setup:
             update_host_setup(menu);
             break;
 
-        case MENU_STATE_HOST_WAITING:
+        case menu_state_host_waiting:
             update_host_waiting(menu);
             break;
 
-        case MENU_STATE_JOIN_SELECTING_GAME:
+        case menu_state_join_selecting_game:
             update_join_browser(menu);
             break;
 
-        case MENU_STATE_JOIN_ENTERING_IP:
+        case menu_state_join_entering_ip:
             update_join_ip_menu(menu);
             break;
 
-        case MENU_STATE_CONNECTING:
+        case menu_state_connecting:
             update_connecting(menu);
             break;
 
@@ -536,7 +536,7 @@ static void render_join_ip_menu(const menu_system* menu) {
     draw_text(menu->ip_input, 260, 240, 20, white);
 
     // Draw blinking cursor
-    if (menu->ip_input_active && ((SDL_GetTicks() / 500) % 2 == 0)) {
+    if (menu->ip_input_active && SDL_GetTicks() / 500 % 2 == 0) {
         const int cursor_x = 260 + measure_text(menu->ip_input, 20);
         draw_rectangle(cursor_x, 240, 2, 20, white);
     }
@@ -572,7 +572,7 @@ static void render_host_setup(const menu_system* menu) {
     draw_text(menu->host_name_input, 260, 220, 20, white);
 
     // Draw blinking cursor for name
-    if (menu->host_name_input_active && ((SDL_GetTicks() / 500) % 2 == 0)) {
+    if (menu->host_name_input_active && SDL_GetTicks() / 500 % 2 == 0) {
         const int cursor_x = 260 + measure_text(menu->host_name_input, 20);
         draw_rectangle(cursor_x, 220, 2, 20, white);
     }
@@ -587,7 +587,7 @@ static void render_host_setup(const menu_system* menu) {
     draw_text(menu->port_input, 260, 310, 20, white);
 
     // Draw blinking cursor for port
-    if (menu->port_input_active && ((SDL_GetTicks() / 500) % 2 == 0)) {
+    if (menu->port_input_active && SDL_GetTicks() / 500 % 2 == 0) {
         const int cursor_x = 260 + measure_text(menu->port_input, 20);
         draw_rectangle(cursor_x, 310, 2, 20, white);
     }
@@ -607,9 +607,9 @@ static void render_host_waiting(const menu_system* menu) {
     draw_text("Waiting for player to connect...", 200, 200, 24, white);
 
     // Animated dots
-    const int dot_count = (SDL_GetTicks() / 500) % 4;
+    const unsigned int dot_count = SDL_GetTicks() / 500 % 4;
     char dots[8] = "";
-    for (int i = 0; i < dot_count; i++) {
+    for (unsigned int i = 0; i < dot_count; i++) {
         strcat(dots, ".");
     }
     draw_text(dots, 560, 200, 24, white);
@@ -691,31 +691,31 @@ void render_menu(const menu_system* menu) {
     clear_background((color){20, 20, 30, 255});
 
     switch (menu->current_state) {
-        case MENU_STATE_MAIN:
+        case menu_state_main:
             render_main_menu(menu);
             break;
 
-        case MENU_STATE_MULTIPLAYER_SELECT:
+        case menu_state_multiplayer_select:
             render_multiplayer_menu(menu);
             break;
 
-        case MENU_STATE_HOST_SETUP:
+        case menu_state_host_setup:
             render_host_setup(menu);
             break;
 
-        case MENU_STATE_HOST_WAITING:
+        case menu_state_host_waiting:
             render_host_waiting(menu);
             break;
 
-        case MENU_STATE_JOIN_SELECTING_GAME:
+        case menu_state_join_selecting_game:
             render_join_browser(menu);
             break;
 
-        case MENU_STATE_JOIN_ENTERING_IP:
+        case menu_state_join_entering_ip:
             render_join_ip_menu(menu);
             break;
 
-        case MENU_STATE_CONNECTING:
+        case menu_state_connecting:
             render_connecting(menu);
             break;
 
@@ -737,17 +737,17 @@ void cleanup_menu(menu_system* menu) {
 
 // Query functions for main.c
 bool menu_should_start_singleplayer(const menu_system* menu) {
-    return menu && menu->current_state == MENU_STATE_PLAYING_SINGLE;
+    return menu && menu->current_state == menu_state_playing_single;
 }
 
 bool menu_should_start_multiplayer(const menu_system* menu) {
-    return menu && (menu->current_state == MENU_STATE_PLAYING_MULTIPLAYER ||
-                    menu->current_state == MENU_STATE_CONNECTING ||
-                    menu->current_state == MENU_STATE_HOST_WAITING);
+    return menu && (menu->current_state == menu_state_playing_multiplayer ||
+                    menu->current_state == menu_state_connecting ||
+                    menu->current_state == menu_state_host_waiting);
 }
 
 bool menu_should_quit(const menu_system* menu) {
-    return menu && menu->current_state == MENU_STATE_QUIT;
+    return menu && menu->current_state == menu_state_quit;
 }
 
 const char* menu_get_ip(const menu_system* menu) {
@@ -759,7 +759,10 @@ int menu_get_port(const menu_system* menu) {
 }
 
 bool menu_is_host(const menu_system* menu) {
-    return menu && menu->is_host;
+    if (menu == nullptr) {
+        return false;
+    }
+    return menu->is_host;
 }
 
 const char* menu_get_player_name(const menu_system* menu) {
@@ -783,14 +786,14 @@ void menu_set_connection_success(menu_system* menu) {
     if (!menu) return;
 
     menu->connection_failed = false;
-    menu->current_state = MENU_STATE_PLAYING_MULTIPLAYER;
+    menu->current_state = menu_state_playing_multiplayer;
 }
 
 void menu_set_player_connected(menu_system* menu) {
     if (!menu) return;
 
     menu->waiting_for_player = false;
-    menu->current_state = MENU_STATE_PLAYING_MULTIPLAYER;
+    menu->current_state = menu_state_playing_multiplayer;
 
     // TODO (Phase 2.5): Stop broadcasting
     // if (menu->discovery) {
