@@ -65,6 +65,7 @@ typedef struct {
     menu_button host_buttons[1];        // Cancel
     menu_button game_buttons[MAX_DISCOVERED_GAMES];  // One per discovered game
     menu_button manual_ip_button;       // "Enter IP Manually" fallback
+    menu_button refresh_button;         // Refresh game list
     menu_button back_button;            // Back from game browser
 
     // Network/connection status

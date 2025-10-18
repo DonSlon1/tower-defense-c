@@ -136,6 +136,11 @@ menu_system init_menu_system(void) {
     };
 
     // Game browser buttons
+    menu.refresh_button = (menu_button){
+        .position = {50, 480},
+        .size = {120, 40},
+        .text = "Refresh"
+    };
     menu.manual_ip_button = (menu_button){
         .position = {200, 480},
         .size = {200, 40},
@@ -313,9 +318,32 @@ static void update_join_browser(menu_system* menu) {
         menu->game_buttons[i].text = "";  // We'll draw custom text in render
     }
 
-    // Update manual IP and back buttons
+    // Update buttons
+    update_button(&menu->refresh_button);
     update_button(&menu->manual_ip_button);
     update_button(&menu->back_button);
+
+    // Handle refresh button
+    if (menu->refresh_button.clicked) {
+        // Close existing discovery if any
+        if (menu->discovery) {
+            discovery_close(menu->discovery);
+            menu->discovery = nullptr;
+        }
+
+        // Create new discovery and scan again
+        menu->discovery = discovery_create(0);
+        if (menu->discovery) {
+            menu->available_game_count = discovery_find_sessions(
+                menu->discovery,
+                menu->available_games,
+                MAX_DISCOVERED_GAMES,
+                2.0f  // 2 second timeout
+            );
+        } else {
+            menu->available_game_count = 0;
+        }
+    }
 
     // Update discovered game buttons
     for (int i = 0; i < menu->available_game_count && i < 8; i++) {
@@ -555,6 +583,8 @@ static void render_join_browser(const menu_system* menu) {
         }
     }
 
+    // Bottom buttons
+    render_button(&menu->refresh_button);
     draw_text("Or:", 370, 450, 16, lightgray);
     render_button(&menu->manual_ip_button);
     render_button(&menu->back_button);
