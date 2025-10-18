@@ -185,8 +185,8 @@ static void update_multiplayer_menu(menu_system* menu) {
         // Join Game - start discovery and show game browser
         menu->is_host = false;
 
-        // Create discovery service and scan for sessions
-        menu->discovery = discovery_create(47777);
+        // Create discovery service (use port 0 for auto-assign, client doesn't need specific port)
+        menu->discovery = discovery_create(0);
         if (menu->discovery) {
             menu->available_game_count = discovery_find_sessions(
                 menu->discovery,
@@ -194,6 +194,9 @@ static void update_multiplayer_menu(menu_system* menu) {
                 MAX_DISCOVERED_GAMES,
                 2.0f  // 2 second timeout
             );
+        } else {
+            // Discovery failed, but we can still use manual IP entry
+            menu->available_game_count = 0;
         }
 
         menu->current_state = MENU_STATE_JOIN_SELECTING_GAME;
