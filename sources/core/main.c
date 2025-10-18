@@ -42,7 +42,6 @@ int main(void)
     while (!window_should_close()) {
         // Reset connection attempt flag if menu state changed
         if (menu.current_state != last_menu_state) {
-            printf("DEBUG: Menu state changed from %d to %d\n", last_menu_state, menu.current_state);
             connection_attempted = false;
             last_menu_state = menu.current_state;
         }
@@ -183,16 +182,6 @@ int main(void)
                         }
 
                         update_game_state(&remote_game, delta);
-
-                        // Debug: Print remote game enemy count every 2 seconds
-                        static float debug_timer = 0;
-                        debug_timer += delta;
-                        if (debug_timer >= 2.0f) {
-                            printf("[DEBUG] Remote game: %d enemies, %d objects total, spawned: %d/%d\n",
-                                   remote_game.enemies_alive, (int)remote_game.object_count,
-                                   remote_game.enemies_spawned_in_wave, remote_wave.enemy_count);
-                            debug_timer = 0;
-                        }
                     }
                     else if (remote_game.state == game_state_wave_break) {
                         update_game_state(&remote_game, delta);
@@ -652,16 +641,6 @@ int main(void)
                             }
 
                             update_game_state(&remote_game, delta);
-
-                            // Debug: Print remote game enemy count every 2 seconds
-                            static float debug_timer = 0;
-                            debug_timer += delta;
-                            if (debug_timer >= 2.0f) {
-                                printf("[DEBUG] Remote game: %d enemies, %d objects total, spawned: %d/%d\n",
-                                       remote_game.enemies_alive, (int)remote_game.object_count,
-                                       remote_game.enemies_spawned_in_wave, remote_wave.enemy_count);
-                                debug_timer = 0;
-                            }
                         }
                         else if (remote_game.state == game_state_wave_break) {
                             update_game_state(&remote_game, delta);
