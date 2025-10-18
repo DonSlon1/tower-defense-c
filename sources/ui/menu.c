@@ -813,10 +813,4 @@ void menu_set_player_connected(menu_system* menu) {
 
     menu->waiting_for_player = false;
     menu->current_state = menu_state_playing_multiplayer;
-
-    // TODO (Phase 2.5): Stop broadcasting
-    // if (menu->discovery) {
-    //     discovery_close(menu->discovery);
-    //     menu->discovery = nullptr;
-    // }
 }
