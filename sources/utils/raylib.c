@@ -4,19 +4,19 @@
 #include <SDL2/SDL_image.h>
 #include <SDL2/SDL_ttf.h>
 
-static SDL_Window* window = NULL;
-static SDL_Renderer* renderer = NULL;
+static SDL_Window* window = nullptr;
+static SDL_Renderer* renderer = nullptr;
 static Uint64 last_time = 0;
 static float delta_time = 0.0f;
-static bool* keys_pressed = NULL;
-static bool* mouse_pressed = NULL;
+static bool* keys_pressed = nullptr;
+static bool* mouse_pressed = nullptr;
 static int screen_width = 0;
 static int screen_height = 0;
 static int target_fps = 60;
-static TTF_Font* default_font = NULL;
+static TTF_Font* default_font = nullptr;
 static unsigned int rprand_state = 0;
-static SDL_Cursor* cursor_normal = NULL;
-static SDL_Cursor* cursor_pointer = NULL;
+static SDL_Cursor* cursor_normal = nullptr;
+static SDL_Cursor* cursor_pointer = nullptr;
 static int last_char_pressed = 0;
 
 void init_window(const int width, const int height, const char* const title) {
@@ -25,7 +25,7 @@ void init_window(const int width, const int height, const char* const title) {
         exit(1);
     }
 
-    const int img_flags = IMG_INIT_PNG;
+    constexpr int img_flags = IMG_INIT_PNG;
     if (!(IMG_Init(img_flags) & img_flags)) {
         fprintf(stderr, "ERROR: IMG_Init failed: %s\n", IMG_GetError());
         SDL_Quit();
@@ -86,7 +86,7 @@ void set_viewport(const int x, const int y, const int width, const int height) {
 
 void reset_viewport(void) {
     if (renderer) {
-        SDL_RenderSetViewport(renderer, NULL);
+        SDL_RenderSetViewport(renderer, nullptr);
     }
 }
 
@@ -163,13 +163,13 @@ void clear_background(const color color) {
 
 int get_screen_width(void) {
     int w = 0;
-    SDL_GetWindowSize(window, &w, NULL);
+    SDL_GetWindowSize(window, &w, nullptr);
     return w > 0 ? w : screen_width;
 }
 
 int get_screen_height(void) {
     int h = 0;
-    SDL_GetWindowSize(window, NULL, &h);
+    SDL_GetWindowSize(window, nullptr, &h);
     return h > 0 ? h : screen_height;
 }
 
@@ -288,7 +288,7 @@ void draw_text(const char* const text, const int pos_x, const int pos_y, const i
     }
 
     const SDL_Rect dest = {pos_x, pos_y, width, height};
-    SDL_RenderCopy(renderer, texture, NULL, &dest);
+    SDL_RenderCopy(renderer, texture, nullptr, &dest);
     SDL_DestroyTexture(texture);
 }
 
@@ -307,7 +307,7 @@ int measure_text(const char* const text, const int font_size) {
     }
 
     int width = 0;
-    TTF_SizeText(default_font, text, &width, NULL);
+    TTF_SizeText(default_font, text, &width, nullptr);
     return width;
 }
 
@@ -368,7 +368,7 @@ int get_random_value(const int min, const int max) {
 // ReSharper disable CppDFAConstantParameter
 static SDL_Surface* scale_surface(SDL_Surface* const src, const int new_width, const int new_height) {
     SDL_Surface* const scaled = SDL_CreateRGBSurfaceWithFormat(0, new_width, new_height, 32, src->format->format);
-    if (!scaled) return NULL;
+    if (!scaled) return nullptr;
 
     const double x_ratio = (double)src->w / new_width;
     const double y_ratio = (double)src->h / new_height;
@@ -398,7 +398,7 @@ void set_mouse_cursor(const char* const file_name) {
         return;
     }
 
-    const int cursor_size = 32;
+    constexpr int cursor_size = 32;
     SDL_Surface* const scaled = scale_surface(surface, cursor_size, cursor_size);
     SDL_FreeSurface(surface);
 
@@ -429,7 +429,7 @@ void set_mouse_pointer(const char* const file_name) {
         return;
     }
 
-    const int cursor_size = 32;
+    constexpr int cursor_size = 32;
     SDL_Surface* const scaled = scale_surface(surface, cursor_size, cursor_size);
     SDL_FreeSurface(surface);
 

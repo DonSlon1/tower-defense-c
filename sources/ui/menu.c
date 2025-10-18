@@ -365,7 +365,7 @@ static void update_host_waiting(menu_system* menu) {
         // Stop discovery
         if (menu->discovery) {
             discovery_close(menu->discovery);
-            menu->discovery = NULL;
+            menu->discovery = nullptr;
         }
     }
 }
@@ -389,7 +389,7 @@ static void update_join_browser(menu_system* menu) {
         // Close existing discovery if any
         if (menu->discovery) {
             discovery_close(menu->discovery);
-            menu->discovery = NULL;
+            menu->discovery = nullptr;
         }
 
         // Create new discovery and scan again
@@ -419,7 +419,7 @@ static void update_join_browser(menu_system* menu) {
             // Clean up discovery
             if (menu->discovery) {
                 discovery_close(menu->discovery);
-                menu->discovery = NULL;
+                menu->discovery = nullptr;
             }
         }
     }
@@ -431,7 +431,7 @@ static void update_join_browser(menu_system* menu) {
         // Clean up discovery
         if (menu->discovery) {
             discovery_close(menu->discovery);
-            menu->discovery = NULL;
+            menu->discovery = nullptr;
         }
     }
 
@@ -441,7 +441,7 @@ static void update_join_browser(menu_system* menu) {
         // Clean up discovery
         if (menu->discovery) {
             discovery_close(menu->discovery);
-            menu->discovery = NULL;
+            menu->discovery = nullptr;
         }
     }
 }
@@ -731,7 +731,7 @@ void cleanup_menu(menu_system* menu) {
     // Clean up discovery
     if (menu->discovery) {
         discovery_close(menu->discovery);
-        menu->discovery = NULL;
+        menu->discovery = nullptr;
     }
 }
 
@@ -759,7 +759,7 @@ int menu_get_port(const menu_system* menu) {
 }
 
 bool menu_is_host(const menu_system* menu) {
-    if (menu == NULL) {
+    if (menu == nullptr) {
         return false;
     }
     return menu->is_host;
@@ -798,6 +798,6 @@ void menu_set_player_connected(menu_system* menu) {
     // TODO (Phase 2.5): Stop broadcasting
     // if (menu->discovery) {
     //     discovery_close(menu->discovery);
-    //     menu->discovery = NULL;
+    //     menu->discovery = nullptr;
     // }
 }

@@ -2,14 +2,14 @@
 #include <stdio.h>
 #include <math.h>
 
-const int mushroom_run_frames = 8;
-const int mushroom_hit_frames = 5;
-const int mushroom_die_frames = 15;
-const int flying_fly_frames = 8;
-const int flying_hit_frames = 4;
-const int flying_die_frames = 17;
-const float anim_frame_duration = 0.1f;
-const float waypoint_reached_threshold = 0.01f;
+constexpr int mushroom_run_frames = 8;
+constexpr int mushroom_hit_frames = 5;
+constexpr int mushroom_die_frames = 15;
+constexpr int flying_fly_frames = 8;
+constexpr int flying_hit_frames = 4;
+constexpr int flying_die_frames = 17;
+constexpr float anim_frame_duration = 0.1f;
+constexpr float waypoint_reached_threshold = 0.01f;
 
 static const vector2 path_0_waypoints[] = {
     {0, 2},
@@ -25,11 +25,11 @@ static const vector2 path_1_waypoints[] = {
     {24, 10}
 };
 
-static const int path_0_count = sizeof(path_0_waypoints) / sizeof(path_0_waypoints[0]);
-static const int path_1_count = sizeof(path_1_waypoints) / sizeof(path_1_waypoints[0]);
+static constexpr int path_0_count = sizeof(path_0_waypoints) / sizeof(path_0_waypoints[0]);
+static constexpr int path_1_count = sizeof(path_1_waypoints) / sizeof(path_1_waypoints[0]);
 
 static const vector2* const paths[] = { path_0_waypoints, path_1_waypoints };
-static const int path_counts[] = { path_0_count, path_1_count };
+static constexpr int path_counts[] = { path_0_count, path_1_count };
 
 enemy_stats get_enemy_stats(const enemy_type type) {
     switch (type) {
@@ -65,7 +65,7 @@ int get_enemy_frame_count(const enemy_type type, const enemy_animation_state sta
 }
 
 void update_enemy_animation(game_object* const enemy, const float delta_time) {
-    if (enemy == NULL) return;
+    if (enemy == nullptr) return;
 
     enemy->data.enemy.frame_timer += delta_time;
 
@@ -94,7 +94,7 @@ void update_enemy_animation(game_object* const enemy, const float delta_time) {
 }
 
 void update_enemy(game_object* const enemy, const float delta_time) {
-    if (enemy == NULL) return;
+    if (enemy == nullptr) return;
 
     if (!enemy->is_active) {
         return;
@@ -161,7 +161,7 @@ void update_enemy(game_object* const enemy, const float delta_time) {
 }
 
 sprite_info get_enemy_sprites(const enemy_type type, const enemy_animation_state state) {
-    sprite_info info = { .sprites = NULL, .count = 0, .width = 1, .height = 1 };
+    sprite_info info = { .sprites = nullptr, .count = 0, .width = 1, .height = 1 };
 
     switch (type) {
         case enemy_type_mushroom:

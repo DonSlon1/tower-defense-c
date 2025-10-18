@@ -30,17 +30,17 @@ typedef struct texture_2d {
     int height;
 } texture_2d;
 
-static const color white = {255, 255, 255, 255};
-static const color black = {0, 0, 0, 255};
-static const color red = {255, 0, 0, 255};
-static const color green = {0, 255, 0, 255};
-static const color skyblue = {135, 206, 235, 255};
-static const color gold = {255, 215, 0, 255};
-static const color lightgray = {200, 200, 200, 255};
+constexpr color white = {255, 255, 255, 255};
+constexpr color black = {0, 0, 0, 255};
+constexpr color red = {255, 0, 0, 255};
+constexpr color green = {0, 255, 0, 255};
+constexpr color skyblue = {135, 206, 235, 255};
+constexpr color gold = {255, 215, 0, 255};
+constexpr color lightgray = {200, 200, 200, 255};
 
-static const int key_space = SDLK_SPACE;
-static const int mouse_button_left = SDL_BUTTON_LEFT;
-static const int mouse_button_right = SDL_BUTTON_RIGHT;
+static constexpr int key_space = SDLK_SPACE;
+static constexpr int mouse_button_left = SDL_BUTTON_LEFT;
+static constexpr int mouse_button_right = SDL_BUTTON_RIGHT;
 
 void init_window(int width, int height, const char* title);
 void set_window_size(int width, int height);
