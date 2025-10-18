@@ -43,9 +43,12 @@ constexpr int mouse_button_left = SDL_BUTTON_LEFT;
 constexpr int mouse_button_right = SDL_BUTTON_RIGHT;
 
 void init_window(int width, int height, const char* title);
+void set_window_size(int width, int height);
 void set_target_fps(int fps);
 void close_window(void);
 bool window_should_close(void);
+void set_viewport(int x, int y, int width, int height);
+void reset_viewport(void);
 void begin_drawing(void);
 void end_drawing(void);
 void clear_background(color color);

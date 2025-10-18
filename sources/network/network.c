@@ -44,37 +44,51 @@ network_state* network_create_host(const uint16_t port) {
     }
 
     printf("HOST: Listening on port %d...\n", port);
-    printf("HOST: Waiting for player to connect...\n");
+    printf("HOST: Server socket ready, waiting for connections...\n");
 
-    // Wait for connection (blocking)
-    net->socket = SDLNet_TCP_Accept(server);
-
-    // Close server socket (we don't need it anymore)
-    SDLNet_TCP_Close(server);
-
-    if (!net->socket) {
-        fprintf(stderr, "ERROR: No client connected\n");
-        free(net);
-        SDLNet_Quit();
-        return nullptr;
-    }
-
+    // Store the server socket in net so we can keep trying to accept
+    // We'll accept in a non-blocking way from the main loop
+    net->socket = server;  // Store server socket (this is the listening socket)
     net->is_host = true;
-    net->is_connected = true;
+    net->is_connected = false;  // Not connected yet
+    net->socket_set = nullptr;  // Will create this after accept
 
-    // Create socket set for non-blocking receive
-    net->socket_set = SDLNet_AllocSocketSet(1);
-    if (!net->socket_set) {
-        fprintf(stderr, "ERROR: Failed to allocate socket set\n");
-        SDLNet_TCP_Close(net->socket);
-        free(net);
-        SDLNet_Quit();
-        return nullptr;
+    return net;  // Return immediately, connection will be completed later
+}
+
+// Non-blocking check for client connection (for host)
+bool network_host_check_for_client(network_state* net) {
+    if (!net || !net->is_host || net->is_connected) {
+        return false;  // Not a host or already connected
     }
-    SDLNet_TCP_AddSocket(net->socket_set, net->socket);
 
-    printf("HOST: Player connected!\n");
-    return net;
+    // Try to accept a connection (non-blocking)
+    TCPsocket server_socket = net->socket;
+    TCPsocket client_socket = SDLNet_TCP_Accept(server_socket);
+
+    if (client_socket) {
+        printf("HOST: Client connected!\n");
+
+        // Close the server socket (we don't need it anymore)
+        SDLNet_TCP_Close(server_socket);
+
+        // Replace with the client socket
+        net->socket = client_socket;
+        net->is_connected = true;
+
+        // Create socket set for non-blocking receive
+        net->socket_set = SDLNet_AllocSocketSet(1);
+        if (!net->socket_set) {
+            fprintf(stderr, "ERROR: Failed to allocate socket set\n");
+            SDLNet_TCP_Close(net->socket);
+            return false;
+        }
+        SDLNet_TCP_AddSocket(net->socket_set, net->socket);
+
+        return true;  // Connection established!
+    }
+
+    return false;  // No client yet
 }
 
 network_state* network_connect(const char* host, const uint16_t port) {

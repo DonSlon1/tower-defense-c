@@ -523,7 +523,9 @@ bool menu_should_start_singleplayer(const menu_system* menu) {
 }
 
 bool menu_should_start_multiplayer(const menu_system* menu) {
-    return menu && menu->current_state == MENU_STATE_PLAYING_MULTIPLAYER;
+    return menu && (menu->current_state == MENU_STATE_PLAYING_MULTIPLAYER ||
+                    menu->current_state == MENU_STATE_CONNECTING ||
+                    menu->current_state == MENU_STATE_HOST_WAITING);
 }
 
 bool menu_should_quit(const menu_system* menu) {

@@ -67,6 +67,28 @@ void init_window(const int width, const int height, const char* const title) {
     SDL_SetRenderDrawBlendMode(renderer, SDL_BLENDMODE_BLEND);
 }
 
+void set_window_size(const int width, const int height) {
+    if (window) {
+        SDL_SetWindowSize(window, width, height);
+        SDL_SetWindowPosition(window, SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED);
+        screen_width = width;
+        screen_height = height;
+    }
+}
+
+void set_viewport(const int x, const int y, const int width, const int height) {
+    if (renderer) {
+        SDL_Rect viewport = {x, y, width, height};
+        SDL_RenderSetViewport(renderer, &viewport);
+    }
+}
+
+void reset_viewport(void) {
+    if (renderer) {
+        SDL_RenderSetViewport(renderer, nullptr);
+    }
+}
+
 void set_target_fps(const int fps) {
     target_fps = fps;
 }
@@ -225,7 +247,7 @@ void draw_rectangle_lines(const int pos_x, const int pos_y, const int width, con
 }
 
 void draw_text(const char* const text, const int pos_x, const int pos_y, const int font_size, const color color) {
-    if (!text) return;
+    if (!text || text[0] == '\0') return;  // Skip null or empty strings
 
     if (!default_font || TTF_FontHeight(default_font) != font_size) {
         if (default_font) TTF_CloseFont(default_font);
@@ -262,7 +284,7 @@ void draw_text(const char* const text, const int pos_x, const int pos_y, const i
 }
 
 int measure_text(const char* const text, const int font_size) {
-    if (!text) return 0;
+    if (!text || text[0] == '\0') return 0;  // Skip null or empty strings
 
     if (!default_font || TTF_FontHeight(default_font) != font_size) {
         if (default_font) TTF_CloseFont(default_font);

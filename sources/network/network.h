@@ -13,6 +13,8 @@ typedef enum {
     MSG_TOWER_BUILD,           // Player built a tower
     MSG_TOWER_UPGRADE,         // Player upgraded a tower
     MSG_SEND_ENEMIES,          // Player sends enemies to opponent
+    MSG_WAVE_COMPLETE,         // Player completed their wave (all enemies dead)
+    MSG_WAVE_START,            // Both players ready - start next wave
     MSG_GAME_SYNC,             // Sync game state
     MSG_DISCONNECT,            // Player leaving
 } message_type;
@@ -31,6 +33,7 @@ typedef struct network_state network_state;
 // Connection management
 network_state* network_create_host(uint16_t port);
 network_state* network_connect(const char* host, uint16_t port);
+bool network_host_check_for_client(network_state* net);  // Non-blocking accept check
 void network_close(network_state* net);
 bool network_is_connected(const network_state* net);
 
