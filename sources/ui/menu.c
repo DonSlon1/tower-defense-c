@@ -64,8 +64,11 @@ menu_system init_menu_system(void) {
     strcpy(menu.ip_input, "127.0.0.1");
     strcpy(menu.port_input, "7777");
     strcpy(menu.player_name, "Player");
+    strcpy(menu.host_name_input, "My Game");
     menu.port_number = 7777;
     menu.ip_cursor_pos = (int)strlen(menu.ip_input);
+    menu.port_cursor_pos = (int)strlen(menu.port_input);
+    menu.host_name_cursor_pos = (int)strlen(menu.host_name_input);
 
     // Initialize main menu buttons (centered on 800x600)
     menu.main_buttons[0] = (menu_button){
@@ -113,6 +116,18 @@ menu_system init_menu_system(void) {
         .text = "Cancel"
     };
 
+    // Host setup screen buttons
+    menu.host_setup_buttons[0] = (menu_button){
+        .position = {250, 380},
+        .size = {150, 40},
+        .text = "Start Hosting"
+    };
+    menu.host_setup_buttons[1] = (menu_button){
+        .position = {420, 380},
+        .size = {120, 40},
+        .text = "Cancel"
+    };
+
     // Host waiting screen button
     menu.host_buttons[0] = (menu_button){
         .position = {340, 400},
@@ -120,7 +135,7 @@ menu_system init_menu_system(void) {
         .text = "Cancel"
     };
 
-    // Game browser buttons (for Phase 2.5)
+    // Game browser buttons
     menu.manual_ip_button = (menu_button){
         .position = {200, 480},
         .size = {200, 40},
@@ -160,25 +175,28 @@ static void update_multiplayer_menu(menu_system* menu) {
     }
 
     if (menu->multi_buttons[0].clicked) {
-        // Host Game
+        // Host Game - go to setup screen
         menu->is_host = true;
-        menu->waiting_for_player = true;
-        menu->current_state = MENU_STATE_HOST_WAITING;
-
-        // TODO (Phase 2.5): Start broadcasting
-        // menu->discovery = discovery_create_broadcaster(menu->player_name, menu->port_number);
+        menu->current_state = MENU_STATE_HOST_SETUP;
+        menu->port_input_active = false;
+        menu->host_name_input_active = false;
 
     } else if (menu->multi_buttons[1].clicked) {
-        // Join Game - go to game browser (or IP entry if no discovery)
+        // Join Game - start discovery and show game browser
         menu->is_host = false;
 
-        // TODO (Phase 2.5): Start discovery and show game browser
-        // menu->discovery = discovery_create_listener();
-        // menu->current_state = MENU_STATE_JOIN_SELECTING_GAME;
+        // Create discovery service and scan for sessions
+        menu->discovery = discovery_create(47777);
+        if (menu->discovery) {
+            menu->available_game_count = discovery_find_sessions(
+                menu->discovery,
+                menu->available_games,
+                MAX_DISCOVERED_GAMES,
+                2.0f  // 2 second timeout
+            );
+        }
 
-        // For now, go straight to manual IP entry
-        menu->current_state = MENU_STATE_JOIN_ENTERING_IP;
-        menu->ip_input_active = true;
+        menu->current_state = MENU_STATE_JOIN_SELECTING_GAME;
 
     } else if (menu->multi_buttons[2].clicked) {
         // Back
@@ -222,77 +240,118 @@ static void update_join_ip_menu(menu_system* menu) {
     }
 }
 
+// Update host setup screen
+static void update_host_setup(menu_system* menu) {
+    // Handle port input
+    if (menu->port_input_active && is_key_pressed(SDLK_BACKSPACE) && menu->port_cursor_pos > 0) {
+        menu->port_cursor_pos--;
+        menu->port_input[menu->port_cursor_pos] = '\0';
+        menu->port_number = atoi(menu->port_input);
+    }
+
+    // Update buttons
+    for (int i = 0; i < 2; i++) {
+        update_button(&menu->host_setup_buttons[i]);
+    }
+
+    if (menu->host_setup_buttons[0].clicked) {
+        // Start Hosting
+        menu->port_number = atoi(menu->port_input);
+        if (menu->port_number <= 0 || menu->port_number > 65535) {
+            menu->port_number = 7777;
+            strcpy(menu->port_input, "7777");
+        }
+
+        menu->waiting_for_player = true;
+        menu->current_state = MENU_STATE_HOST_WAITING;
+
+        // Start discovery broadcaster
+        menu->discovery = discovery_create(47777);
+        if (menu->discovery) {
+            discovery_start_host(menu->discovery, menu->host_name_input, menu->port_number);
+        }
+
+    } else if (menu->host_setup_buttons[1].clicked) {
+        // Cancel
+        menu->current_state = MENU_STATE_MULTIPLAYER_SELECT;
+        menu->port_input_active = false;
+        menu->host_name_input_active = false;
+    }
+}
+
 // Update host waiting screen
 static void update_host_waiting(menu_system* menu) {
     update_button(&menu->host_buttons[0]);
 
-    // TODO (Phase 2.5): Broadcast presence
-    // if (menu->discovery) {
-    //     discovery_broadcast(menu->discovery);
-    // }
+    // Respond to discovery requests
+    if (menu->discovery) {
+        discovery_host_update(menu->discovery);
+    }
 
     if (menu->host_buttons[0].clicked) {
         // Cancel hosting
         menu->current_state = MENU_STATE_MULTIPLAYER_SELECT;
         menu->waiting_for_player = false;
 
-        // TODO (Phase 2.5): Stop broadcasting
-        // if (menu->discovery) {
-        //     discovery_close(menu->discovery);
-        //     menu->discovery = NULL;
-        // }
+        // Stop discovery
+        if (menu->discovery) {
+            discovery_close(menu->discovery);
+            menu->discovery = nullptr;
+        }
     }
 }
 
-// Update game browser (Phase 2.5 - with discovery)
+// Update game browser
 static void update_join_browser(menu_system* menu) {
-    // TODO (Phase 2.5): Update discovery
-    // if (menu->discovery) {
-    //     discovery_update(menu->discovery);
-    //     menu->available_game_count = discovery_get_games(
-    //         menu->discovery,
-    //         menu->available_games,
-    //         MAX_DISCOVERED_GAMES
-    //     );
-    // }
+    // Initialize game buttons based on discovered sessions
+    for (int i = 0; i < menu->available_game_count && i < 8; i++) {
+        menu->game_buttons[i].position = (vector2){100, 170 + i * 35};
+        menu->game_buttons[i].size = (vector2){600, 30};
+        menu->game_buttons[i].text = "";  // We'll draw custom text in render
+    }
 
-    // For now, just show manual IP button
+    // Update manual IP and back buttons
     update_button(&menu->manual_ip_button);
     update_button(&menu->back_button);
+
+    // Update discovered game buttons
+    for (int i = 0; i < menu->available_game_count && i < 8; i++) {
+        update_button(&menu->game_buttons[i]);
+        if (menu->game_buttons[i].clicked) {
+            // Connect to selected game
+            strncpy(menu->ip_input, menu->available_games[i].ip_address, sizeof(menu->ip_input) - 1);
+            menu->ip_input[sizeof(menu->ip_input) - 1] = '\0';
+            menu->port_number = menu->available_games[i].port;
+            menu->current_state = MENU_STATE_CONNECTING;
+
+            // Clean up discovery
+            if (menu->discovery) {
+                discovery_close(menu->discovery);
+                menu->discovery = nullptr;
+            }
+        }
+    }
 
     if (menu->manual_ip_button.clicked) {
         menu->current_state = MENU_STATE_JOIN_ENTERING_IP;
         menu->ip_input_active = true;
 
-        // TODO (Phase 2.5): Stop discovery
-        // if (menu->discovery) {
-        //     discovery_close(menu->discovery);
-        //     menu->discovery = NULL;
-        // }
+        // Clean up discovery
+        if (menu->discovery) {
+            discovery_close(menu->discovery);
+            menu->discovery = nullptr;
+        }
     }
 
     if (menu->back_button.clicked) {
         menu->current_state = MENU_STATE_MULTIPLAYER_SELECT;
 
-        // TODO (Phase 2.5): Stop discovery
-        // if (menu->discovery) {
-        //     discovery_close(menu->discovery);
-        //     menu->discovery = NULL;
-        // }
+        // Clean up discovery
+        if (menu->discovery) {
+            discovery_close(menu->discovery);
+            menu->discovery = nullptr;
+        }
     }
-
-    // TODO (Phase 2.5): Update game list buttons
-    // for (int i = 0; i < menu->available_game_count; i++) {
-    //     update_button(&menu->game_buttons[i]);
-    //     if (menu->game_buttons[i].clicked) {
-    //         // Connect to selected game
-    //         strncpy(menu->ip_input, menu->available_games[i].host_ip, 63);
-    //         menu->port_number = menu->available_games[i].game_port;
-    //         menu->current_state = MENU_STATE_CONNECTING;
-    //         discovery_close(menu->discovery);
-    //         menu->discovery = NULL;
-    //     }
-    // }
 }
 
 // Update connecting screen
@@ -319,6 +378,10 @@ void update_menu(menu_system* menu) {
 
         case MENU_STATE_MULTIPLAYER_SELECT:
             update_multiplayer_menu(menu);
+            break;
+
+        case MENU_STATE_HOST_SETUP:
+            update_host_setup(menu);
             break;
 
         case MENU_STATE_HOST_WAITING:
@@ -400,6 +463,34 @@ static void render_join_ip_menu(const menu_system* menu) {
     draw_text("For LAN use host's local IP: 192.168.x.x", 180, 445, 16, lightgray);
 }
 
+// Render host setup screen
+static void render_host_setup(const menu_system* menu) {
+    draw_text("HOST GAME SETUP", 250, 100, 36, white);
+
+    // Host name input
+    draw_text("Session Name:", 250, 180, 20, white);
+    const color name_input_bg = menu->host_name_input_active ?
+        (color){80, 80, 80, 255} : (color){60, 60, 60, 255};
+    draw_rectangle(250, 210, 300, 40, name_input_bg);
+    draw_rectangle_lines(250, 210, 300, 40, white);
+    draw_text(menu->host_name_input, 260, 220, 20, white);
+
+    // Port input
+    draw_text("Port:", 250, 270, 20, white);
+    const color port_input_bg = menu->port_input_active ?
+        (color){80, 80, 80, 255} : (color){60, 60, 60, 255};
+    draw_rectangle(250, 300, 300, 40, port_input_bg);
+    draw_rectangle_lines(250, 300, 300, 40, white);
+    draw_text(menu->port_input, 260, 310, 20, white);
+
+    draw_text("Press port field to edit", 260, 345, 14, lightgray);
+
+    // Buttons
+    for (int i = 0; i < 2; i++) {
+        render_button(&menu->host_setup_buttons[i]);
+    }
+}
+
 // Render host waiting screen
 static void render_host_waiting(const menu_system* menu) {
     draw_text("HOSTING GAME", 280, 100, 40, white);
@@ -427,26 +518,38 @@ static void render_host_waiting(const menu_system* menu) {
     render_button(&menu->host_buttons[0]);
 }
 
-// Render game browser (Phase 2.5)
+// Render game browser
 static void render_join_browser(const menu_system* menu) {
     draw_text("AVAILABLE GAMES", 240, 80, 30, white);
 
     if (menu->available_game_count == 0) {
-        draw_text("Searching for games...", 250, 250, 20, lightgray);
-
-        // Animated dots
-        const int dots = (SDL_GetTicks() / 500) % 4;
-        char dot_str[8] = "";
-        for (int i = 0; i < dots; i++) strcat(dot_str, ".");
-        draw_text(dot_str, 480, 250, 20, lightgray);
-
-        draw_text("No games found on local network", 220, 300, 18, lightgray);
+        draw_text("No games found on local network", 220, 250, 18, lightgray);
+        draw_text("Make sure the host is running", 230, 280, 16, lightgray);
     } else {
-        // TODO (Phase 2.5): Render discovered games
-        // for (int i = 0; i < menu->available_game_count; i++) {
-        //     render_button(&menu->game_buttons[i]);
-        //     // Show game info (host name, IP, etc.)
-        // }
+        // Render discovered games
+        draw_text("Select a game to join:", 250, 130, 18, white);
+
+        for (int i = 0; i < menu->available_game_count && i < 8; i++) {
+            const int y = 170 + i * 35;
+
+            // Draw game info text
+            char game_info[128];
+            snprintf(game_info, sizeof(game_info), "%s - %s:%d",
+                    menu->available_games[i].host_name,
+                    menu->available_games[i].ip_address,
+                    menu->available_games[i].port);
+
+            const bool hovered = menu->game_buttons[i].hovered;
+            const color bg_color = hovered ? (color){80, 120, 80, 255} : (color){50, 70, 50, 255};
+            const color text_color = hovered ? white : lightgray;
+
+            // Draw background box
+            draw_rectangle(100, y, 600, 30, bg_color);
+            draw_rectangle_lines(100, y, 600, 30, hovered ? green : (color){100, 100, 100, 255});
+
+            // Draw text
+            draw_text(game_info, 110, y + 6, 16, text_color);
+        }
     }
 
     draw_text("Or:", 370, 450, 16, lightgray);
@@ -485,6 +588,10 @@ void render_menu(const menu_system* menu) {
             render_multiplayer_menu(menu);
             break;
 
+        case MENU_STATE_HOST_SETUP:
+            render_host_setup(menu);
+            break;
+
         case MENU_STATE_HOST_WAITING:
             render_host_waiting(menu);
             break;
@@ -510,11 +617,11 @@ void render_menu(const menu_system* menu) {
 void cleanup_menu(menu_system* menu) {
     if (!menu) return;
 
-    // TODO (Phase 2.5): Clean up discovery
-    // if (menu->discovery) {
-    //     discovery_close(menu->discovery);
-    //     menu->discovery = NULL;
-    // }
+    // Clean up discovery
+    if (menu->discovery) {
+        discovery_close(menu->discovery);
+        menu->discovery = nullptr;
+    }
 }
 
 // Query functions for main.c

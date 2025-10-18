@@ -2,15 +2,14 @@
 #define MENU_H
 
 #include "raylib.h"
+#include "../network/network.h"
 #include <stdbool.h>
-
-// Forward declaration for discovery system (you'll implement this later)
-typedef struct discovery_state discovery_state;
 
 // Menu states - tracks which screen we're on
 typedef enum {
     MENU_STATE_MAIN,                    // Main menu: Single/Multi/Quit
     MENU_STATE_MULTIPLAYER_SELECT,      // Multiplayer: Host/Join/Back
+    MENU_STATE_HOST_SETUP,              // Configure host settings (port, name)
     MENU_STATE_HOST_WAITING,            // Waiting for player to connect
     MENU_STATE_JOIN_SELECTING_GAME,     // Browse discovered games (with discovery)
     MENU_STATE_JOIN_ENTERING_IP,        // Manual IP entry
@@ -51,6 +50,8 @@ typedef struct {
     bool ip_input_active;
 
     char port_input[8];
+    int port_cursor_pos;
+    bool port_input_active;
     int port_number;
 
     // Player name input (for later)
@@ -60,6 +61,7 @@ typedef struct {
     menu_button main_buttons[3];        // Single Player, Multiplayer, Quit
     menu_button multi_buttons[3];       // Host, Join, Back
     menu_button ip_buttons[2];          // Connect, Cancel
+    menu_button host_setup_buttons[2];  // Start Hosting, Cancel
     menu_button host_buttons[1];        // Cancel
     menu_button game_buttons[MAX_DISCOVERED_GAMES];  // One per discovered game
     menu_button manual_ip_button;       // "Enter IP Manually" fallback
@@ -71,11 +73,16 @@ typedef struct {
     bool connection_failed;
     char error_message[128];
 
-    // Game discovery (Phase 2.5 - you'll implement discovery.c later)
-    discovery_state* discovery;
-    discovered_game available_games[MAX_DISCOVERED_GAMES];
+    // Game discovery
+    session_discovery* discovery;
+    discovered_session available_games[MAX_DISCOVERED_GAMES];
     int available_game_count;
     int selected_game_index;
+
+    // Host name for broadcasting
+    char host_name_input[64];
+    int host_name_cursor_pos;
+    bool host_name_input_active;
 
 } menu_system;
 
