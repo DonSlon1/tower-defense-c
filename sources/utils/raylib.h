@@ -70,6 +70,9 @@ bool is_mouse_button_pressed(int button);
 vector2 get_mouse_position(void);
 int get_random_value(int min, int max);
 
+// Text input
+int get_char_pressed(void);  // Returns ASCII char pressed this frame, or 0 if none
+
 void set_mouse_cursor(const char* file_name);
 void set_mouse_pointer(const char* file_name);
 void use_normal_cursor(void);

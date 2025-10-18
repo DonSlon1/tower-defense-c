@@ -17,6 +17,7 @@ static TTF_Font* default_font = nullptr;
 static unsigned int rprand_state = 0;
 static SDL_Cursor* cursor_normal = nullptr;
 static SDL_Cursor* cursor_pointer = nullptr;
+static int last_char_pressed = 0;
 
 void init_window(const int width, const int height, const char* const title) {
     if (SDL_Init(SDL_INIT_VIDEO) < 0) {
@@ -110,6 +111,7 @@ bool window_should_close(void) {
     SDL_Event event;
     memset(keys_pressed, 0, SDL_NUM_SCANCODES * sizeof(bool));
     memset(mouse_pressed, 0, (SDL_BUTTON_X2 + 1) * sizeof(bool));
+    last_char_pressed = 0;
 
     while (SDL_PollEvent(&event)) {
         if (event.type == SDL_QUIT) {
@@ -117,6 +119,12 @@ bool window_should_close(void) {
         }
         if (event.type == SDL_KEYDOWN) {
             keys_pressed[event.key.keysym.scancode] = true;
+
+            // Capture text input for printable characters
+            const SDL_Keycode key = event.key.keysym.sym;
+            if (key >= 32 && key <= 126) {  // Printable ASCII range
+                last_char_pressed = key;
+            }
         }
         if (event.type == SDL_MOUSEBUTTONDOWN) {
             mouse_pressed[event.button.button] = true;
@@ -322,6 +330,10 @@ vector2 get_mouse_position(void) {
     int x, y;
     SDL_GetMouseState(&x, &y);
     return (vector2){(float)x, (float)y};
+}
+
+int get_char_pressed(void) {
+    return last_char_pressed;
 }
 
 static int get_random_value_internal(const int min, const int max) {

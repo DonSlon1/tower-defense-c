@@ -212,23 +212,55 @@ static void update_multiplayer_menu(menu_system* menu) {
     }
 }
 
+// Helper: Handle text input for a field
+static void handle_text_input(char* buffer, int* cursor_pos, int max_length, bool (*char_filter)(char)) {
+    // Handle backspace
+    if (is_key_pressed(SDLK_BACKSPACE) && *cursor_pos > 0) {
+        (*cursor_pos)--;
+        buffer[*cursor_pos] = '\0';
+    }
+
+    // Handle character input
+    const int ch = get_char_pressed();
+    if (ch > 0 && *cursor_pos < max_length - 1) {
+        // Check if character passes filter (if provided)
+        if (!char_filter || char_filter((char)ch)) {
+            buffer[*cursor_pos] = (char)ch;
+            (*cursor_pos)++;
+            buffer[*cursor_pos] = '\0';
+        }
+    }
+}
+
+// Character filters
+static bool is_valid_ip_char(const char c) {
+    return (c >= '0' && c <= '9') || c == '.';
+}
+
+static bool is_valid_port_char(const char c) {
+    return (c >= '0' && c <= '9');
+}
+
+static bool is_valid_name_char(const char c) {
+    return (c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z') ||
+           (c >= '0' && c <= '9') || c == ' ' || c == '-' || c == '_';
+}
+
 // Update IP input field
 static void update_ip_input(menu_system* menu) {
     if (!menu->ip_input_active) return;
-
-    // TODO (Phase 1.5): Implement proper text input with SDL_TextInputEvent
-    // For now, IP input is pre-filled with 127.0.0.1
-    // You can manually edit it in the code if needed
-
-    // Handle backspace
-    if (is_key_pressed(SDLK_BACKSPACE) && menu->ip_cursor_pos > 0) {
-        menu->ip_cursor_pos--;
-        menu->ip_input[menu->ip_cursor_pos] = '\0';
-    }
+    handle_text_input(menu->ip_input, &menu->ip_cursor_pos, sizeof(menu->ip_input), is_valid_ip_char);
 }
 
 // Update join/IP entry menu
 static void update_join_ip_menu(menu_system* menu) {
+    // Handle clicking on IP field
+    const vector2 mouse = get_mouse_position();
+    const bool clicked = is_mouse_button_pressed(mouse_button_left);
+    if (clicked && mouse.x >= 250 && mouse.x <= 550 && mouse.y >= 230 && mouse.y <= 270) {
+        menu->ip_input_active = true;
+    }
+
     update_ip_input(menu);
 
     for (int i = 0; i < 2; i++) {
@@ -250,11 +282,27 @@ static void update_join_ip_menu(menu_system* menu) {
 
 // Update host setup screen
 static void update_host_setup(menu_system* menu) {
-    // Handle port input
-    if (menu->port_input_active && is_key_pressed(SDLK_BACKSPACE) && menu->port_cursor_pos > 0) {
-        menu->port_cursor_pos--;
-        menu->port_input[menu->port_cursor_pos] = '\0';
-        menu->port_number = atoi(menu->port_input);
+    // Handle clicking on input fields to activate them
+    const vector2 mouse = get_mouse_position();
+    const bool clicked = is_mouse_button_pressed(mouse_button_left);
+
+    // Check click on host name field
+    if (clicked && mouse.x >= 250 && mouse.x <= 550 && mouse.y >= 210 && mouse.y <= 250) {
+        menu->host_name_input_active = true;
+        menu->port_input_active = false;
+    }
+    // Check click on port field
+    else if (clicked && mouse.x >= 250 && mouse.x <= 550 && mouse.y >= 300 && mouse.y <= 340) {
+        menu->port_input_active = true;
+        menu->host_name_input_active = false;
+    }
+
+    // Handle text input for active fields
+    if (menu->host_name_input_active) {
+        handle_text_input(menu->host_name_input, &menu->host_name_cursor_pos, sizeof(menu->host_name_input), is_valid_name_char);
+    }
+    if (menu->port_input_active) {
+        handle_text_input(menu->port_input, &menu->port_cursor_pos, sizeof(menu->port_input), is_valid_port_char);
     }
 
     // Update buttons
@@ -467,8 +515,9 @@ static void render_join_ip_menu(const menu_system* menu) {
     const color input_bg = menu->ip_input_active ?
         (color){80, 80, 80, 255} :
         (color){60, 60, 60, 255};
+    const color input_border = menu->ip_input_active ? green : white;
     draw_rectangle(250, 230, 300, 40, input_bg);
-    draw_rectangle_lines(250, 230, 300, 40, white);
+    draw_rectangle_lines(250, 230, 300, 40, input_border);
 
     // Draw IP text
     draw_text(menu->ip_input, 260, 240, 20, white);
@@ -478,6 +527,8 @@ static void render_join_ip_menu(const menu_system* menu) {
         const int cursor_x = 260 + measure_text(menu->ip_input, 20);
         draw_rectangle(cursor_x, 240, 2, 20, white);
     }
+
+    draw_text("Click to edit. Numbers and dots only.", 250, 275, 14, lightgray);
 
     // Draw port info
     char port_text[64];
@@ -502,19 +553,33 @@ static void render_host_setup(const menu_system* menu) {
     draw_text("Session Name:", 250, 180, 20, white);
     const color name_input_bg = menu->host_name_input_active ?
         (color){80, 80, 80, 255} : (color){60, 60, 60, 255};
+    const color name_border = menu->host_name_input_active ? green : white;
     draw_rectangle(250, 210, 300, 40, name_input_bg);
-    draw_rectangle_lines(250, 210, 300, 40, white);
+    draw_rectangle_lines(250, 210, 300, 40, name_border);
     draw_text(menu->host_name_input, 260, 220, 20, white);
+
+    // Draw blinking cursor for name
+    if (menu->host_name_input_active && ((SDL_GetTicks() / 500) % 2 == 0)) {
+        const int cursor_x = 260 + measure_text(menu->host_name_input, 20);
+        draw_rectangle(cursor_x, 220, 2, 20, white);
+    }
 
     // Port input
     draw_text("Port:", 250, 270, 20, white);
     const color port_input_bg = menu->port_input_active ?
         (color){80, 80, 80, 255} : (color){60, 60, 60, 255};
+    const color port_border = menu->port_input_active ? green : white;
     draw_rectangle(250, 300, 300, 40, port_input_bg);
-    draw_rectangle_lines(250, 300, 300, 40, white);
+    draw_rectangle_lines(250, 300, 300, 40, port_border);
     draw_text(menu->port_input, 260, 310, 20, white);
 
-    draw_text("Press port field to edit", 260, 345, 14, lightgray);
+    // Draw blinking cursor for port
+    if (menu->port_input_active && ((SDL_GetTicks() / 500) % 2 == 0)) {
+        const int cursor_x = 260 + measure_text(menu->port_input, 20);
+        draw_rectangle(cursor_x, 310, 2, 20, white);
+    }
+
+    draw_text("Click fields to edit (letters, numbers, space, - and _ allowed)", 160, 345, 14, lightgray);
 
     // Buttons
     for (int i = 0; i < 2; i++) {
