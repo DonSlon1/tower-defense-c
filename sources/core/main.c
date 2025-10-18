@@ -6,93 +6,70 @@
 #include "multiplayer_ui.h"
 #include "tower.h"
 
-// Forward declarations for game functions
 void handle_playing_input(game *game);
 void spawn_enemy(game *game);
 
-// Screen dimensions
 #define MENU_WIDTH 800
 #define MENU_HEIGHT 600
 #define MULTIPLAYER_WIDTH 1600
 #define MULTIPLAYER_HEIGHT 600
-
-// Window title
 #define WINDOW_TITLE "Tower Defense"
 
 int main(void)
 {
-    // Start with menu-sized window
     init_window(MENU_WIDTH, MENU_HEIGHT, WINDOW_TITLE);
     set_target_fps(60);
     set_window_icon(ASSETS_PATH "images/towers.png");
     set_mouse_cursor(ASSETS_PATH "cursor/Middle Ages--cursor--SweezyCursors.png");
     set_mouse_pointer(ASSETS_PATH "cursor/Middle Ages--pointer--SweezyCursors.png");
 
-    // Initialize menu system
     menu_system menu = init_menu_system();
-
-    // Track if we've already attempted multiplayer connection
     bool connection_attempted = false;
     menu_state last_menu_state = MENU_STATE_MAIN;
-
-    // Network state persists across frames
     network_state* active_network = NULL;
 
-    // Main loop - menu mode
     while (!window_should_close()) {
-        // Reset connection attempt flag if menu state changed
         if (menu.current_state != last_menu_state) {
             connection_attempted = false;
             last_menu_state = menu.current_state;
         }
 
-        // If we have an active network connection waiting (host), check for client
         if (active_network && menu_is_host(&menu) && !network_is_connected(active_network)) {
             if (network_host_check_for_client(active_network)) {
                 printf("SUCCESS: Client connected!\n");
                 printf("Starting multiplayer game...\n");
                 menu_set_player_connected(&menu);
 
-                // Resize window for split-screen
                 set_window_size(MULTIPLAYER_WIDTH, MULTIPLAYER_HEIGHT);
 
-                // Initialize both game states
                 game local_game = init_game();
                 game remote_game = init_game();
 
-                // Start both games (wave 1)
                 start_next_wave(&local_game);
                 local_game.state = game_state_playing;
                 start_next_wave(&remote_game);
                 remote_game.state = game_state_playing;
 
-                // Initialize multiplayer UI
                 multiplayer_ui mp_ui = init_multiplayer_ui(true, MULTIPLAYER_WIDTH, MULTIPLAYER_HEIGHT);
 
-                // Wave synchronization flags
                 bool local_wave_complete = false;
                 bool remote_wave_complete = false;
 
-                // Game sync timer (send state every second)
                 float game_sync_timer = 0.0f;
                 const float GAME_SYNC_INTERVAL = 1.0f;
 
-                // Multiplayer game loop
                 while (!window_should_close() && network_is_connected(active_network)) {
                     const float delta = get_frame_time();
 
-                    // Update UI dimensions based on current window size
                     const int current_width = get_screen_width();
                     const int current_height = get_screen_height();
                     update_multiplayer_ui_dimensions(&mp_ui, current_width, current_height);
 
-                    // Handle game logic for local game
                     if (local_game.state == game_state_playing) {
                         if (local_game.player_lives <= 0) {
                             local_game.state = game_state_game_over;
                         }
 
-                        // Handle input (tower building, upgrading) with network sync
                         const grid_coord grid_pos = screen_to_grid(get_mouse_position(), &local_game.tilemap);
                         const game_object* hovered_tower = find_tower_at_grid(&local_game, grid_pos);
                         const int spot_index = find_tower_spot_at_grid(&local_game, grid_pos);
@@ -137,7 +114,6 @@ int main(void)
                             }
                         }
 
-                        // Spawn wave enemies automatically (normal wave progression)
                         const wave_config current_wave = get_wave_config(local_game.current_wave);
                         if (local_game.enemies_spawned_in_wave < current_wave.enemy_count) {
                             local_game.enemy_spawn_timer -= delta;
@@ -147,7 +123,6 @@ int main(void)
                             }
                         }
 
-                        // Check if wave enemies are spawned AND all enemies are dead
                         const bool wave_spawning_complete = local_game.enemies_spawned_in_wave >= current_wave.enemy_count;
                         if (wave_spawning_complete && local_game.enemies_alive == 0 && !local_wave_complete) {
                             local_wave_complete = true;
@@ -165,13 +140,10 @@ int main(void)
                             }
                         }
 
-                        // Update game state (move enemies, towers shoot, etc.)
                         update_game_state(&local_game, delta);
                     }
 
-                    // Always update remote game (so opponent's game runs independently)
                     if (remote_game.state == game_state_playing) {
-                        // Spawn wave enemies automatically for remote game
                         const wave_config remote_wave = get_wave_config(remote_game.current_wave);
                         if (remote_game.enemies_spawned_in_wave < remote_wave.enemy_count) {
                             remote_game.enemy_spawn_timer -= delta;
@@ -214,15 +186,12 @@ int main(void)
                         }
                     }
 
-                    // Update multiplayer UI
                     update_multiplayer_ui(&mp_ui);
 
-                    // Send periodic game state sync
                     game_sync_timer += delta;
                     if (game_sync_timer >= GAME_SYNC_INTERVAL) {
                         game_sync_timer = 0.0f;
 
-                        // Pack essential game state into a compact message
                         typedef struct {
                             uint16_t money;
                             uint16_t lives;
@@ -248,14 +217,12 @@ int main(void)
                         }
                     }
 
-                    // Check for enemy send button clicks
                     int cost = 0;
                     const int enemy_count = check_send_button_clicked(&mp_ui, &cost);
                     if (enemy_count > 0 && local_game.player_money >= cost) {
                         printf("Sending %d enemies to opponent (cost: $%d)\n", enemy_count, cost);
                         local_game.player_money -= cost;
 
-                        // Send network message
                         typedef struct { uint8_t count; } send_enemy_data;
                         send_enemy_data data = { .count = enemy_count };
                         network_message msg = network_create_message(MSG_SEND_ENEMIES, &data, sizeof(data));
@@ -266,7 +233,6 @@ int main(void)
                         }
                     }
 
-                    // Receive and process network messages
                     network_message msg;
                     while (network_receive(active_network, &msg)) {
                         printf("Received network message type %d\n", msg.type);
@@ -391,11 +357,9 @@ int main(void)
                         }
                     }
 
-                    // Render
                     begin_drawing();
                     clear_background(black);
 
-                    // Draw local game (left side)
                     draw_tilemap(&local_game.tilemap);
                     draw_tower_spots(&local_game);
                     draw_game_objects(&local_game);
@@ -408,7 +372,6 @@ int main(void)
                         draw_text("WAVE COMPLETE!", 250, 270, 24, green);
                         draw_text("Waiting for opponent...", 220, 310, 18, gold);
                     }
-                    // Show wave break countdown when both players are done
                     else if (local_game.state == game_state_wave_break) {
                         char timer_text[64];
                         snprintf(timer_text, sizeof(timer_text), "Next wave in: %.0f", local_game.wave_break_timer);
@@ -416,38 +379,31 @@ int main(void)
                         draw_text(timer_text, 260, 280, 24, green);
                     }
 
-                    // Draw split screen UI elements (divider and labels)
                     render_split_screen(&mp_ui, &local_game, &remote_game);
 
                     // Draw opponent's game (right side) using viewport
                     set_viewport(mp_ui.split_x, 0, mp_ui.game_width, mp_ui.game_height);
 
-                    // Render opponent's game (same as local game rendering)
                     draw_tilemap(&remote_game.tilemap);
                     draw_tower_spots(&remote_game);
                     draw_game_objects(&remote_game);
                     draw_hud(&remote_game);
                     draw_wave_info(&remote_game);
 
-                    // Reset viewport
                     reset_viewport();
 
-                    // Render enemy send UI
                     render_enemy_send_ui(&mp_ui, &local_game);
 
-                    // Render connection status
                     render_connection_status(&mp_ui);
 
                     end_drawing();
 
-                    // ESC to quit
                     if (is_key_pressed(SDLK_ESCAPE)) {
                         printf("User quit multiplayer game\n");
                         break;
                     }
                 }
 
-                // Cleanup
                 unload_game(&local_game);
                 unload_game(&remote_game);
                 network_close(active_network);
@@ -512,46 +468,36 @@ int main(void)
                     printf("Starting multiplayer game...\n");
                     menu_set_connection_success(&menu);
 
-                    // Resize window for split-screen
                     set_window_size(MULTIPLAYER_WIDTH, MULTIPLAYER_HEIGHT);
 
-                    // Initialize both game states
                     game local_game = init_game();
                     game remote_game = init_game();
 
-                    // Start both games (wave 1)
                     start_next_wave(&local_game);
                     local_game.state = game_state_playing;
                     start_next_wave(&remote_game);
                     remote_game.state = game_state_playing;
 
-                    // Initialize multiplayer UI
                     multiplayer_ui mp_ui = init_multiplayer_ui(false, MULTIPLAYER_WIDTH, MULTIPLAYER_HEIGHT);
 
-                    // Wave synchronization flags
                     bool local_wave_complete = false;
                     bool remote_wave_complete = false;
 
-                    // Game sync timer (send state every second)
                     float game_sync_timer = 0.0f;
                     const float GAME_SYNC_INTERVAL = 1.0f;
 
-                    // Multiplayer game loop
                     while (!window_should_close() && network_is_connected(active_network)) {
                         const float delta = get_frame_time();
 
-                        // Update UI dimensions based on current window size
                         const int current_width = get_screen_width();
                         const int current_height = get_screen_height();
                         update_multiplayer_ui_dimensions(&mp_ui, current_width, current_height);
 
-                        // Handle game logic for local game
                         if (local_game.state == game_state_playing) {
                             if (local_game.player_lives <= 0) {
                                 local_game.state = game_state_game_over;
                             }
 
-                            // Handle input (tower building, upgrading) with network sync
                             const grid_coord grid_pos = screen_to_grid(get_mouse_position(), &local_game.tilemap);
                             const game_object* hovered_tower = find_tower_at_grid(&local_game, grid_pos);
                             const int spot_index = find_tower_spot_at_grid(&local_game, grid_pos);
@@ -596,7 +542,6 @@ int main(void)
                                 }
                             }
 
-                            // Spawn wave enemies automatically (normal wave progression)
                             const wave_config current_wave = get_wave_config(local_game.current_wave);
                             if (local_game.enemies_spawned_in_wave < current_wave.enemy_count) {
                                 local_game.enemy_spawn_timer -= delta;
@@ -606,7 +551,6 @@ int main(void)
                                 }
                             }
 
-                            // Check if wave enemies are spawned AND all enemies are dead
                             const bool wave_spawning_complete = local_game.enemies_spawned_in_wave >= current_wave.enemy_count;
                             if (wave_spawning_complete && local_game.enemies_alive == 0 && !local_wave_complete) {
                                 local_wave_complete = true;
@@ -624,13 +568,10 @@ int main(void)
                                 }
                             }
 
-                            // Update game state (move enemies, towers shoot, etc.)
                             update_game_state(&local_game, delta);
                         }
 
-                        // Always update remote game (so opponent's game runs independently)
                         if (remote_game.state == game_state_playing) {
-                            // Spawn wave enemies automatically for remote game
                             const wave_config remote_wave = get_wave_config(remote_game.current_wave);
                             if (remote_game.enemies_spawned_in_wave < remote_wave.enemy_count) {
                                 remote_game.enemy_spawn_timer -= delta;
@@ -673,15 +614,12 @@ int main(void)
                             }
                         }
 
-                        // Update multiplayer UI
                         update_multiplayer_ui(&mp_ui);
 
-                        // Send periodic game state sync
                         game_sync_timer += delta;
                         if (game_sync_timer >= GAME_SYNC_INTERVAL) {
                             game_sync_timer = 0.0f;
 
-                            // Pack essential game state into a compact message
                             typedef struct {
                                 uint16_t money;
                                 uint16_t lives;
@@ -707,14 +645,12 @@ int main(void)
                             }
                         }
 
-                        // Check for enemy send button clicks
                         int cost = 0;
                         const int enemy_count = check_send_button_clicked(&mp_ui, &cost);
                         if (enemy_count > 0 && local_game.player_money >= cost) {
                             printf("Sending %d enemies to opponent (cost: $%d)\n", enemy_count, cost);
                             local_game.player_money -= cost;
 
-                            // Send network message
                             typedef struct { uint8_t count; } send_enemy_data;
                             send_enemy_data data = { .count = enemy_count };
                             network_message msg = network_create_message(MSG_SEND_ENEMIES, &data, sizeof(data));
@@ -725,7 +661,6 @@ int main(void)
                             }
                         }
 
-                        // Receive and process network messages
                         network_message msg;
                         while (network_receive(active_network, &msg)) {
                             printf("Received network message type %d\n", msg.type);
@@ -850,11 +785,9 @@ int main(void)
                             }
                         }
 
-                        // Render
                         begin_drawing();
                         clear_background(black);
 
-                        // Draw local game (left side)
                         draw_tilemap(&local_game.tilemap);
                         draw_tower_spots(&local_game);
                         draw_game_objects(&local_game);
@@ -867,7 +800,6 @@ int main(void)
                             draw_text("WAVE COMPLETE!", 250, 270, 24, green);
                             draw_text("Waiting for opponent...", 220, 310, 18, gold);
                         }
-                        // Show wave break countdown when both players are done
                         else if (local_game.state == game_state_wave_break) {
                             char timer_text[64];
                             snprintf(timer_text, sizeof(timer_text), "Next wave in: %.0f", local_game.wave_break_timer);
@@ -875,38 +807,31 @@ int main(void)
                             draw_text(timer_text, 260, 280, 24, green);
                         }
 
-                        // Draw split screen UI elements (divider and labels)
                         render_split_screen(&mp_ui, &local_game, &remote_game);
 
                         // Draw opponent's game (right side) using viewport
                         set_viewport(mp_ui.split_x, 0, mp_ui.game_width, mp_ui.game_height);
 
-                        // Render opponent's game (same as local game rendering)
                         draw_tilemap(&remote_game.tilemap);
                         draw_tower_spots(&remote_game);
                         draw_game_objects(&remote_game);
                         draw_hud(&remote_game);
                         draw_wave_info(&remote_game);
 
-                        // Reset viewport
                         reset_viewport();
 
-                        // Render enemy send UI
                         render_enemy_send_ui(&mp_ui, &local_game);
 
-                        // Render connection status
                         render_connection_status(&mp_ui);
 
                         end_drawing();
 
-                        // ESC to quit
                         if (is_key_pressed(SDLK_ESCAPE)) {
                             printf("User quit multiplayer game\n");
                             break;
                         }
                     }
 
-                    // Cleanup
                     unload_game(&local_game);
                     unload_game(&remote_game);
                     network_close(active_network);
@@ -928,13 +853,11 @@ int main(void)
             break;
         }
 
-        // Render menu
         begin_drawing();
         render_menu(&menu);
         end_drawing();
     }
 
-    // Cleanup
     if (active_network) {
         network_close(active_network);
     }
