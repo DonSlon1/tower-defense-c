@@ -3,6 +3,20 @@
 #include "renderer.h"
 #include <stdio.h>
 
+constexpr float button_width = 120;
+constexpr float button_height = 40;
+constexpr float button_spacing = 10;
+constexpr float button_start_x = 20;
+constexpr float button_offset_y = 60;
+
+static void position_send_buttons(multiplayer_ui* ui, const int window_height) {
+    const float button_y = (float)window_height - button_offset_y;
+
+    ui->send_buttons[0].position = (vector2){button_start_x, button_y};
+    ui->send_buttons[1].position = (vector2){button_start_x + button_width + button_spacing, button_y};
+    ui->send_buttons[2].position = (vector2){button_start_x + (button_width + button_spacing) * 2, button_y};
+}
+
 // Initialize multiplayer UI
 multiplayer_ui init_multiplayer_ui(const bool is_host, const int window_width, const int window_height) {
     multiplayer_ui ui = {0};
@@ -13,16 +27,7 @@ multiplayer_ui init_multiplayer_ui(const bool is_host, const int window_width, c
     ui.game_width = window_width / 2;
     ui.game_height = window_height;
 
-    // Initialize enemy send buttons (positioned at bottom of left game view)
-    constexpr int button_width = 120;
-    constexpr int button_height = 40;
-    constexpr int button_spacing = 10;
-    const int button_y = window_height - 60;
-    constexpr int start_x = 20;
-
-    // Send 1 enemy ($50)
     ui.send_buttons[0] = (send_enemy_button){
-        .position = {start_x, button_y},
         .size = {button_width, button_height},
         .label = "Send 1 ($50)",
         .enemy_count = 1,
@@ -31,9 +36,7 @@ multiplayer_ui init_multiplayer_ui(const bool is_host, const int window_width, c
         .clicked = false
     };
 
-    // Send 5 enemies ($200)
     ui.send_buttons[1] = (send_enemy_button){
-        .position = {start_x + button_width + button_spacing, button_y},
         .size = {button_width, button_height},
         .label = "Send 5 ($200)",
         .enemy_count = 5,
@@ -42,9 +45,7 @@ multiplayer_ui init_multiplayer_ui(const bool is_host, const int window_width, c
         .clicked = false
     };
 
-    // Send 10 enemies ($350)
     ui.send_buttons[2] = (send_enemy_button){
-        .position = {start_x + (button_width + button_spacing) * 2, button_y},
         .size = {button_width, button_height},
         .label = "Send 10 ($350)",
         .enemy_count = 10,
@@ -52,6 +53,8 @@ multiplayer_ui init_multiplayer_ui(const bool is_host, const int window_width, c
         .hovered = false,
         .clicked = false
     };
+
+    position_send_buttons(&ui, window_height);
 
     return ui;
 }
@@ -73,15 +76,7 @@ void update_multiplayer_ui_dimensions(multiplayer_ui* ui, const int window_width
     ui->game_width = window_width / 2;
     ui->game_height = window_height;
 
-    // Update button positions based on new window size
-    constexpr int button_width = 120;
-    constexpr int button_spacing = 10;
-    const int button_y = window_height - 60;
-    constexpr int start_x = 20;
-
-    ui->send_buttons[0].position = (vector2){start_x, button_y};
-    ui->send_buttons[1].position = (vector2){start_x + button_width + button_spacing, button_y};
-    ui->send_buttons[2].position = (vector2){start_x + (button_width + button_spacing) * 2, button_y};
+    position_send_buttons(ui, window_height);
 }
 
 // Update UI (check button hovers/clicks)
@@ -124,27 +119,27 @@ static void render_send_button(const send_enemy_button* button, const bool can_a
 
     // Draw button background
     draw_rectangle(
-        button->position.x,
-        button->position.y,
-        button->size.x,
-        button->size.y,
+        (int)button->position.x,
+        (int)button->position.y,
+        (int)button->size.x,
+        (int)button->size.y,
         button_color
     );
 
     // Draw border
     const color border_color = button->hovered ? green : white;
     draw_rectangle_lines(
-        button->position.x,
-        button->position.y,
-        button->size.x,
-        button->size.y,
+       (int)button->position.x,
+        (int)button->position.y,
+        (int)button->size.x,
+        (int)button->size.y,
         border_color
     );
 
     // Draw text
     const color text_color = can_afford ? white : (color){120, 120, 120, 255};
-    const int text_x = button->position.x + 10;
-    const int text_y = button->position.y + 12;
+    const int text_x = (int)button->position.x + 10;
+    const int text_y = (int)button->position.y + 12;
     draw_text(button->label, text_x, text_y, 16, text_color);
 }
 
