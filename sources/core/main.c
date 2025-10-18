@@ -84,7 +84,6 @@ int main(void)
                             const upgrade_result result = upgrade_clicked_tower(&local_game, grid_pos);
                             switch (result) {
                                 case upgrade_success:
-                                    printf("Tower upgraded successfully!\n");
                                     // Send tower upgrade to opponent
                                     typedef struct { uint8_t spot; uint8_t level; } tower_upgrade_data;
                                     tower_upgrade_data upgrade_data = {
@@ -95,10 +94,8 @@ int main(void)
                                     network_send(active_network, &msg);
                                     break;
                                 case upgrade_insufficient_funds:
-                                    printf("Insufficient funds for upgrade\n");
                                     break;
                                 case upgrade_max_level:
-                                    printf("Tower is already at max level\n");
                                     break;
                                 case upgrade_not_found:
                                     if (spot_index >= 0) {
@@ -126,7 +123,6 @@ int main(void)
                         const bool wave_spawning_complete = local_game.enemies_spawned_in_wave >= current_wave.enemy_count;
                         if (wave_spawning_complete && local_game.enemies_alive == 0 && !local_wave_complete) {
                             local_wave_complete = true;
-                            printf("Local wave complete! Waiting for opponent...\n");
 
                             // Notify opponent we're done
                             network_message msg = network_create_message(MSG_WAVE_COMPLETE, nullptr, 0);
@@ -134,7 +130,6 @@ int main(void)
 
                             // Check if both players are done
                             if (remote_wave_complete) {
-                                printf("Both players complete! Starting wave break...\n");
                                 local_game.state = game_state_wave_break;
                                 local_game.wave_break_timer = WAVE_BREAK_DURATION;
                             }
@@ -182,7 +177,6 @@ int main(void)
                             wave_start_data data = { .wave = local_game.current_wave };
                             network_message wave_msg = network_create_message(MSG_WAVE_START, &data, sizeof(data));
                             network_send(active_network, &wave_msg);
-                            printf("Started wave %d, syncing with opponent\n", local_game.current_wave);
                         }
                     }
 
@@ -211,23 +205,18 @@ int main(void)
                         };
 
                         network_message sync_msg = network_create_message(MSG_GAME_SYNC, &sync_data, sizeof(sync_data));
-                        if (network_send(active_network, &sync_msg)) {
-                            printf("[SYNC] Sent game state: money=%d lives=%d wave=%d enemies=%d\n",
-                                   sync_data.money, sync_data.lives, sync_data.wave, sync_data.enemies_alive);
-                        }
+                        network_send(active_network, &sync_msg);
                     }
 
                     int cost = 0;
                     const int enemy_count = check_send_button_clicked(&mp_ui, &cost);
                     if (enemy_count > 0 && local_game.player_money >= cost) {
-                        printf("Sending %d enemies to opponent (cost: $%d)\n", enemy_count, cost);
                         local_game.player_money -= cost;
 
                         typedef struct { uint8_t count; } send_enemy_data;
                         send_enemy_data data = { .count = enemy_count };
                         network_message msg = network_create_message(MSG_SEND_ENEMIES, &data, sizeof(data));
                         if (network_send(active_network, &msg)) {
-                            printf("Network message sent successfully\n");
                         } else {
                             printf("ERROR: Failed to send network message\n");
                         }
@@ -235,13 +224,11 @@ int main(void)
 
                     network_message msg;
                     while (network_receive(active_network, &msg)) {
-                        printf("Received network message type %d\n", msg.type);
 
                         switch (msg.type) {
                             case MSG_SEND_ENEMIES: {
                                 typedef struct { uint8_t count; } send_enemy_data;
                                 const send_enemy_data* data = (const send_enemy_data*)msg.data;
-                                printf("Opponent sent %d EXTRA enemies to us!\n", data->count);
 
                                 // Spawn enemies in our local game
                                 // NOTE: These are EXTRA enemies, not part of the wave count
@@ -255,7 +242,6 @@ int main(void)
                             case MSG_TOWER_BUILD: {
                                 typedef struct { uint8_t spot; } tower_build_data;
                                 const tower_build_data* data = (const tower_build_data*)msg.data;
-                                printf("Opponent built a tower at spot %d\n", data->spot);
 
                                 // Build tower in remote game
                                 if (data->spot < 4) {
@@ -267,7 +253,6 @@ int main(void)
                             case MSG_TOWER_UPGRADE: {
                                 typedef struct { uint8_t spot; uint8_t level; } tower_upgrade_data;
                                 const tower_upgrade_data* data = (const tower_upgrade_data*)msg.data;
-                                printf("Opponent upgraded tower at spot %d to level %d\n", data->spot, data->level);
 
                                 // Find and upgrade tower in remote game
                                 if (data->spot < 4) {
@@ -287,12 +272,10 @@ int main(void)
                             }
 
                             case MSG_WAVE_COMPLETE: {
-                                printf("Opponent completed their wave!\n");
                                 remote_wave_complete = true;
 
                                 // Check if both players are done
                                 if (local_wave_complete && local_game.state == game_state_playing) {
-                                    printf("Both players complete! Starting wave break...\n");
                                     local_game.state = game_state_wave_break;
                                     local_game.wave_break_timer = WAVE_BREAK_DURATION;
                                 }
@@ -302,7 +285,6 @@ int main(void)
                             case MSG_WAVE_START: {
                                 typedef struct { uint8_t wave; } wave_start_data;
                                 const wave_start_data* data = (const wave_start_data*)msg.data;
-                                printf("Opponent started wave %d\n", data->wave);
 
                                 // Sync opponent's game wave
                                 if (remote_game.current_wave < data->wave) {
@@ -333,9 +315,6 @@ int main(void)
 
                                 const game_sync_data* data = (const game_sync_data*)msg.data;
 
-                                printf("[SYNC] Received opponent state: money=%d lives=%d wave=%d enemies=%d\n",
-                                       data->money, data->lives, data->wave, data->enemies_alive);
-
                                 // Update remote game state with opponent's data
                                 remote_game.player_money = data->money;
                                 remote_game.player_lives = data->lives;
@@ -347,12 +326,10 @@ int main(void)
                             }
 
                             case MSG_PING: {
-                                printf("Received ping from opponent\n");
                                 break;
                             }
 
                             default:
-                                printf("Unknown message type: %d\n", msg.type);
                                 break;
                         }
                     }
@@ -399,7 +376,6 @@ int main(void)
                     end_drawing();
 
                     if (is_key_pressed(SDLK_ESCAPE)) {
-                        printf("User quit multiplayer game\n");
                         break;
                     }
                 }
@@ -512,7 +488,6 @@ int main(void)
                                 const upgrade_result result = upgrade_clicked_tower(&local_game, grid_pos);
                                 switch (result) {
                                     case upgrade_success:
-                                        printf("Tower upgraded successfully!\n");
                                         // Send tower upgrade to opponent
                                         typedef struct { uint8_t spot; uint8_t level; } tower_upgrade_data;
                                         tower_upgrade_data upgrade_data = {
@@ -523,10 +498,8 @@ int main(void)
                                         network_send(active_network, &msg);
                                         break;
                                     case upgrade_insufficient_funds:
-                                        printf("Insufficient funds for upgrade\n");
                                         break;
                                     case upgrade_max_level:
-                                        printf("Tower is already at max level\n");
                                         break;
                                     case upgrade_not_found:
                                         if (spot_index >= 0) {
@@ -554,7 +527,6 @@ int main(void)
                             const bool wave_spawning_complete = local_game.enemies_spawned_in_wave >= current_wave.enemy_count;
                             if (wave_spawning_complete && local_game.enemies_alive == 0 && !local_wave_complete) {
                                 local_wave_complete = true;
-                                printf("Local wave complete! Waiting for opponent...\n");
 
                                 // Notify opponent we're done
                                 network_message msg = network_create_message(MSG_WAVE_COMPLETE, nullptr, 0);
@@ -562,7 +534,6 @@ int main(void)
 
                                 // Check if both players are done
                                 if (remote_wave_complete) {
-                                    printf("Both players complete! Starting wave break...\n");
                                     local_game.state = game_state_wave_break;
                                     local_game.wave_break_timer = WAVE_BREAK_DURATION;
                                 }
@@ -610,7 +581,6 @@ int main(void)
                                 wave_start_data data = { .wave = local_game.current_wave };
                                 network_message wave_msg = network_create_message(MSG_WAVE_START, &data, sizeof(data));
                                 network_send(active_network, &wave_msg);
-                                printf("Started wave %d, syncing with opponent\n", local_game.current_wave);
                             }
                         }
 
@@ -639,23 +609,18 @@ int main(void)
                             };
 
                             network_message sync_msg = network_create_message(MSG_GAME_SYNC, &sync_data, sizeof(sync_data));
-                            if (network_send(active_network, &sync_msg)) {
-                                printf("[SYNC] Sent game state: money=%d lives=%d wave=%d enemies=%d\n",
-                                       sync_data.money, sync_data.lives, sync_data.wave, sync_data.enemies_alive);
-                            }
+                            network_send(active_network, &sync_msg);
                         }
 
                         int cost = 0;
                         const int enemy_count = check_send_button_clicked(&mp_ui, &cost);
                         if (enemy_count > 0 && local_game.player_money >= cost) {
-                            printf("Sending %d enemies to opponent (cost: $%d)\n", enemy_count, cost);
                             local_game.player_money -= cost;
 
                             typedef struct { uint8_t count; } send_enemy_data;
                             send_enemy_data data = { .count = enemy_count };
                             network_message msg = network_create_message(MSG_SEND_ENEMIES, &data, sizeof(data));
                             if (network_send(active_network, &msg)) {
-                                printf("Network message sent successfully\n");
                             } else {
                                 printf("ERROR: Failed to send network message\n");
                             }
@@ -663,13 +628,11 @@ int main(void)
 
                         network_message msg;
                         while (network_receive(active_network, &msg)) {
-                            printf("Received network message type %d\n", msg.type);
 
                             switch (msg.type) {
                                 case MSG_SEND_ENEMIES: {
                                     typedef struct { uint8_t count; } send_enemy_data;
                                     const send_enemy_data* data = (const send_enemy_data*)msg.data;
-                                    printf("Opponent sent %d EXTRA enemies to us!\n", data->count);
 
                                     // Spawn enemies in our local game
                                     // NOTE: These are EXTRA enemies, not part of the wave count
@@ -683,7 +646,6 @@ int main(void)
                                 case MSG_TOWER_BUILD: {
                                     typedef struct { uint8_t spot; } tower_build_data;
                                     const tower_build_data* data = (const tower_build_data*)msg.data;
-                                    printf("Opponent built a tower at spot %d\n", data->spot);
 
                                     // Build tower in remote game
                                     if (data->spot < 4) {
@@ -695,7 +657,6 @@ int main(void)
                                 case MSG_TOWER_UPGRADE: {
                                     typedef struct { uint8_t spot; uint8_t level; } tower_upgrade_data;
                                     const tower_upgrade_data* data = (const tower_upgrade_data*)msg.data;
-                                    printf("Opponent upgraded tower at spot %d to level %d\n", data->spot, data->level);
 
                                     // Find and upgrade tower in remote game
                                     if (data->spot < 4) {
@@ -715,12 +676,10 @@ int main(void)
                                 }
 
                                 case MSG_WAVE_COMPLETE: {
-                                    printf("Opponent completed their wave!\n");
                                     remote_wave_complete = true;
 
                                     // Check if both players are done
                                     if (local_wave_complete && local_game.state == game_state_playing) {
-                                        printf("Both players complete! Starting wave break...\n");
                                         local_game.state = game_state_wave_break;
                                         local_game.wave_break_timer = WAVE_BREAK_DURATION;
                                     }
@@ -730,7 +689,6 @@ int main(void)
                                 case MSG_WAVE_START: {
                                     typedef struct { uint8_t wave; } wave_start_data;
                                     const wave_start_data* data = (const wave_start_data*)msg.data;
-                                    printf("Opponent started wave %d\n", data->wave);
 
                                     // Sync opponent's game wave
                                     if (remote_game.current_wave < data->wave) {
@@ -761,9 +719,6 @@ int main(void)
 
                                     const game_sync_data* data = (const game_sync_data*)msg.data;
 
-                                    printf("[SYNC] Received opponent state: money=%d lives=%d wave=%d enemies=%d\n",
-                                           data->money, data->lives, data->wave, data->enemies_alive);
-
                                     // Update remote game state with opponent's data
                                     remote_game.player_money = data->money;
                                     remote_game.player_lives = data->lives;
@@ -775,12 +730,10 @@ int main(void)
                                 }
 
                                 case MSG_PING: {
-                                    printf("Received ping from opponent\n");
                                     break;
                                 }
 
                                 default:
-                                    printf("Unknown message type: %d\n", msg.type);
                                     break;
                             }
                         }
@@ -827,7 +780,6 @@ int main(void)
                         end_drawing();
 
                         if (is_key_pressed(SDLK_ESCAPE)) {
-                            printf("User quit multiplayer game\n");
                             break;
                         }
                     }

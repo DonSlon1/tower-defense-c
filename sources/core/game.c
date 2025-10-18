@@ -28,13 +28,10 @@ void handle_playing_input(game *game) {
         const upgrade_result result = upgrade_clicked_tower(game, grid_pos);
         switch (result) {
             case upgrade_success:
-                printf("Tower upgraded successfully!\n");
                 break;
             case upgrade_insufficient_funds:
-                printf("Insufficient funds for upgrade\n");
                 break;
             case upgrade_max_level:
-                printf("Tower is already at max level\n");
                 break;
             case upgrade_not_found:
                 if (spot_index >= 0) {
@@ -359,7 +356,6 @@ void unload_game(game *game) {
     unload_texture(game->assets.start_screen);
     unload_texture(game->assets.defeat_screen);
     game->game_objects = nullptr;
-    printf("GAME: was unloaded\n");
 }
 
 grid_coord screen_to_grid(const vector2 screen_pos, const tile_map* tilemap) {
@@ -469,16 +465,12 @@ bool try_build_tower(game *game, const int spot_index) {
     }
 
     if (game->player_money < TOWER_BUILD_COST) {
-        printf("Not enough money to build tower! Need $%d, have $%d\n",
-               TOWER_BUILD_COST, game->player_money);
         return false;
     }
 
     game->player_money -= TOWER_BUILD_COST;
     add_game_object(game, init_tower(spot->position));
     spot->occupied = true;
-    printf("Tower built! Cost: $%d, Money remaining: $%d\n",
-           TOWER_BUILD_COST, game->player_money);
 
     return true;
 }

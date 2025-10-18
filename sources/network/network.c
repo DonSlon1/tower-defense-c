@@ -43,8 +43,6 @@ network_state* network_create_host(const uint16_t port) {
         return nullptr;
     }
 
-    printf("HOST: Listening on port %d...\n", port);
-    printf("HOST: Server socket ready, waiting for connections...\n");
 
     // Store the server socket in net so we can keep trying to accept
     // We'll accept in a non-blocking way from the main loop
@@ -67,7 +65,6 @@ bool network_host_check_for_client(network_state* net) {
     TCPsocket client_socket = SDLNet_TCP_Accept(server_socket);
 
     if (client_socket) {
-        printf("HOST: Client connected!\n");
 
         // Close the server socket (we don't need it anymore)
         SDLNet_TCP_Close(server_socket);
@@ -114,7 +111,6 @@ network_state* network_connect(const char* host, const uint16_t port) {
         return nullptr;
     }
 
-    printf("CLIENT: Connecting to %s:%d...\n", host, port);
 
     // Connect to server
     net->socket = SDLNet_TCP_Open(&ip);
@@ -139,7 +135,6 @@ network_state* network_connect(const char* host, const uint16_t port) {
     }
     SDLNet_TCP_AddSocket(net->socket_set, net->socket);
 
-    printf("CLIENT: Connected successfully!\n");
     return net;
 }
 
