@@ -56,7 +56,7 @@ int main(void)
                 bool remote_wave_complete = false;
 
                 float game_sync_timer = 0.0f;
-                const float GAME_SYNC_INTERVAL = 1.0f;
+                constexpr float GAME_SYNC_INTERVAL = 1.0f;
 
                 while (!window_should_close() && network_is_connected(active_network)) {
                     const float delta = get_frame_time();
@@ -484,7 +484,7 @@ int main(void)
                     bool remote_wave_complete = false;
 
                     float game_sync_timer = 0.0f;
-                    const float GAME_SYNC_INTERVAL = 1.0f;
+                    constexpr float GAME_SYNC_INTERVAL = 1.0f;
 
                     while (!window_should_close() && network_is_connected(active_network)) {
                         const float delta = get_frame_time();
@@ -835,7 +835,7 @@ int main(void)
                     unload_game(&local_game);
                     unload_game(&remote_game);
                     network_close(active_network);
-                    active_network = NULL;
+                    active_network = nullptr;
 
                     // Resize back to menu size
                     set_window_size(MENU_WIDTH, MENU_HEIGHT);
@@ -843,7 +843,7 @@ int main(void)
                 } else {
                     printf("ERROR: Failed to connect to %s:%d\n", ip, port);
                     menu_set_connection_failed(&menu, "Failed to connect to host");
-                    active_network = NULL;
+                    active_network = nullptr;
                 }
             }
         }
