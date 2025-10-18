@@ -98,26 +98,8 @@ void update_multiplayer_ui(multiplayer_ui* ui) {
     }
 }
 
-// Render a single game view (with scaling/offset)
-static void render_game_view(const game* game_state, const int offset_x, const int offset_y,
-                             const int view_width, const int view_height) {
-    if (!game_state) return;
-
-    // TODO: This is a simplified version - you'll need to implement proper viewport rendering
-    // For now, we'll just draw at an offset
-
-    // Draw tilemap
-    draw_tilemap(&game_state->tilemap);  // TODO: Add offset support in Phase 6
-
-    // Draw game objects (enemies, towers, projectiles)
-    // Note: This requires modifying your renderer to support offsets
-    // For now, we'll use the existing draw functions
-
-    // Draw HUD for this game view
-    // draw_hud(game_state);  // TODO: Add offset support
-}
-
-// Render split-screen view
+// Render split-screen UI elements (divider and labels)
+// Note: Actual game rendering is done in main.c using SDL viewports
 void render_split_screen(const multiplayer_ui* ui, const game* local_game, const game* remote_game) {
     if (!ui) return;
 
@@ -127,23 +109,6 @@ void render_split_screen(const multiplayer_ui* ui, const game* local_game, const
     // Draw labels
     draw_text("YOUR GAME", 20, 10, 20, green);
     draw_text("OPPONENT", ui->split_x + 20, 10, 20, red);
-
-    // Left side: Your game
-    if (local_game) {
-        // TODO: Render local game with proper viewport
-        // For now, render normally (assuming left side is default)
-        draw_game_objects(local_game);
-        draw_hud(local_game);
-        draw_tower_spots(local_game);
-        draw_wave_info(local_game);
-    }
-
-    // Right side: Opponent's game
-    if (remote_game) {
-        // TODO: Render remote game with offset
-        // This requires modifying renderer to support viewport offsets
-        // For Phase 6 implementation
-    }
 }
 
 // Render a single send button

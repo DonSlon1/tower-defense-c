@@ -10,16 +10,6 @@
 void handle_playing_input(game *game);
 void spawn_enemy(game *game);
 
-// Helper function to render game with X offset (for split-screen)
-void render_game_with_offset(const game* g, int offset_x) {
-    // TODO: This is a simplified version - proper offset rendering requires
-    // modifying all draw functions to support viewport translation
-    // For now, we just show basic info - full rendering in Phase 6
-
-    // We can't easily offset the existing rendering functions without major refactoring
-    // So for now, show text-based representation
-}
-
 // Screen dimensions
 #define MENU_WIDTH 800
 #define MENU_HEIGHT 600
