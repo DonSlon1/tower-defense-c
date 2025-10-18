@@ -156,8 +156,8 @@ void end_drawing(void) {
     SDL_RenderPresent(renderer);
 }
 
-void clear_background(const color color) {
-    SDL_SetRenderDrawColor(renderer, color.r, color.g, color.b, color.a);
+void clear_background(const color c) {
+    SDL_SetRenderDrawColor(renderer, c.r, c.g, c.b, c.a);
     SDL_RenderClear(renderer);
 }
 
@@ -205,19 +205,19 @@ void unload_texture(const texture_2d texture) {
     }
 }
 
-void draw_texture_pro(const texture_2d texture, const rectangle source, const rectangle dest, const vector2 origin, const float rotation, const color tint) {
+void draw_texture_pro(const texture_2d texture, const rectangle source, const rectangle dest, const vector2 origin, const float rotation, const color c) {
     if (texture.id == 0) {
         return;
     }
 
     const auto sdl_texture = (SDL_Texture*)(uintptr_t)texture.id;
 
-    if (SDL_SetTextureColorMod(sdl_texture, tint.r, tint.g, tint.b) < 0) {
+    if (SDL_SetTextureColorMod(sdl_texture, c.r, c.g, c.b) < 0) {
         fprintf(stderr, "ERROR: SDL_SetTextureColorMod failed: %s\n", SDL_GetError());
         return;
     }
 
-    if (SDL_SetTextureAlphaMod(sdl_texture, tint.a) < 0) {
+    if (SDL_SetTextureAlphaMod(sdl_texture, c.a) < 0) {
         fprintf(stderr, "ERROR: SDL_SetTextureAlphaMod failed: %s\n", SDL_GetError());
         return;
     }
@@ -243,19 +243,19 @@ void draw_texture_pro(const texture_2d texture, const rectangle source, const re
     }
 }
 
-void draw_rectangle(const int pos_x, const int pos_y, const int width, const int height, const color color) {
-    SDL_SetRenderDrawColor(renderer, color.r, color.g, color.b, color.a);
+void draw_rectangle(const int pos_x, const int pos_y, const int width, const int height, const color c) {
+    SDL_SetRenderDrawColor(renderer, c.r, c.g, c.b, c.a);
     const SDL_Rect rect = {pos_x, pos_y, width, height};
     SDL_RenderFillRect(renderer, &rect);
 }
 
-void draw_rectangle_lines(const int pos_x, const int pos_y, const int width, const int height, const color color) {
-    SDL_SetRenderDrawColor(renderer, color.r, color.g, color.b, color.a);
+void draw_rectangle_lines(const int pos_x, const int pos_y, const int width, const int height, const color c) {
+    SDL_SetRenderDrawColor(renderer, c.r, c.g, c.b, c.a);
     const SDL_Rect rect = {pos_x, pos_y, width, height};
     SDL_RenderDrawRect(renderer, &rect);
 }
 
-void draw_text(const char* const text, const int pos_x, const int pos_y, const int font_size, const color color) {
+void draw_text(const char* const text, const int pos_x, const int pos_y, const int font_size, const color c) {
     if (!text || text[0] == '\0') return;  // Skip null or empty strings
 
     if (!default_font || TTF_FontHeight(default_font) != font_size) {
@@ -270,7 +270,7 @@ void draw_text(const char* const text, const int pos_x, const int pos_y, const i
         }
     }
 
-    const SDL_Color sdl_color = {color.r, color.g, color.b, color.a};
+    const SDL_Color sdl_color = {c.r, c.g, c.b, c.a};
     SDL_Surface* const surface = TTF_RenderText_Blended(default_font, text, sdl_color);
     if (!surface) {
         fprintf(stderr, "ERROR: Failed to render text: %s\n", TTF_GetError());

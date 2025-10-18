@@ -326,9 +326,9 @@ static void update_host_setup(menu_system* menu) {
         stop_text_input();
 
         // Parse port number with error checking
-        char* endptr;
-        const long port_long = strtol(menu->port_input, &endptr, 10);
-        if (*endptr != '\0' || port_long <= 0 || port_long > 65535) {
+        char* end_ptr;
+        const long port_long = strtol(menu->port_input, &end_ptr, 10);
+        if (*end_ptr != '\0' || port_long <= 0 || port_long > 65535) {
             // Invalid port, use default
             menu->port_number = 7777;
             strcpy(menu->port_input, "7777");
@@ -342,7 +342,7 @@ static void update_host_setup(menu_system* menu) {
         // Start discovery broadcaster
         menu->discovery = discovery_create(47777);
         if (menu->discovery) {
-            discovery_start_host(menu->discovery, menu->host_name_input, menu->port_number);
+            discovery_start_host(menu->discovery, menu->host_name_input, (uint16_t)menu->port_number);
         }
 
     } else if (menu->host_setup_buttons[1].clicked) {
@@ -499,6 +499,9 @@ void update_menu(menu_system* menu) {
             update_connecting(menu);
             break;
 
+        case menu_state_playing_single:
+        case menu_state_playing_multiplayer:
+        case menu_state_quit:
         default:
             break;
     }
@@ -732,6 +735,9 @@ void render_menu(const menu_system* menu) {
             render_connecting(menu);
             break;
 
+        case menu_state_playing_single:
+        case menu_state_playing_multiplayer:
+        case menu_state_quit:
         default:
             break;
     }

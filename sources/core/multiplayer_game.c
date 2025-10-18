@@ -7,10 +7,6 @@
 #include "tower.h"
 #include <stdio.h>
 
-// Forward declarations for helper functions from game.c
-void handle_playing_input(game *game);
-void spawn_enemy(game *game);
-
 void run_multiplayer_host_game(network_state* net, int window_width, int window_height)
 {
     set_window_size(window_width, window_height);
@@ -56,16 +52,17 @@ void run_multiplayer_host_game(network_state* net, int window_width, int window_
             if (is_mouse_button_pressed(mouse_button_left)) {
                 const upgrade_result result = upgrade_clicked_tower(&local_game, grid_pos);
                 switch (result) {
-                    case upgrade_success:
+                    case upgrade_success: {
                         // Send tower upgrade to opponent
                         typedef struct { uint8_t spot; uint8_t level; } tower_upgrade_data;
                         tower_upgrade_data upgrade_data = {
                             .spot = (uint8_t)spot_index,
-                            .level = hovered_tower ? hovered_tower->data.tower.level : 0
+                            .level = (uint8_t)(hovered_tower ? hovered_tower->data.tower.level : 0)
                         };
                         network_message msg = network_create_message(msg_tower_upgrade, &upgrade_data, sizeof(upgrade_data));
                         network_send(net, &msg);
                         break;
+                    }
                     case upgrade_insufficient_funds:
                     case upgrade_max_level:
                         break;
@@ -79,6 +76,8 @@ void run_multiplayer_host_game(network_state* net, int window_width, int window_
                                 network_send(net, &build_msg);
                             }
                         }
+                        break;
+                    default:
                         break;
                 }
             }
@@ -146,7 +145,7 @@ void run_multiplayer_host_game(network_state* net, int window_width, int window_
 
                 // Sync wave start with opponent
                 typedef struct { uint8_t wave; } wave_start_data;
-                wave_start_data data = { .wave = local_game.current_wave };
+                wave_start_data data = { .wave = (uint8_t)local_game.current_wave };
                 network_message wave_msg = network_create_message(msg_wave_start, &data, sizeof(data));
                 network_send(net, &wave_msg);
             }
@@ -186,7 +185,7 @@ void run_multiplayer_host_game(network_state* net, int window_width, int window_
             local_game.player_money -= cost;
 
             typedef struct { uint8_t count; } send_enemy_data;
-            send_enemy_data data = { .count = enemy_count };
+            send_enemy_data data = { .count = (uint8_t)enemy_count };
             network_message msg = network_create_message(msg_send_enemies, &data, sizeof(data));
             if (network_send(net, &msg)) {
             } else {
@@ -301,6 +300,9 @@ void run_multiplayer_host_game(network_state* net, int window_width, int window_
                     break;
                 }
 
+                case msg_disconnect:
+                case msg_discover_request:
+                case msg_discover_response:
                 default:
                     break;
             }
@@ -322,8 +324,8 @@ void run_multiplayer_host_game(network_state* net, int window_width, int window_
             draw_text("Waiting for opponent...", 220, 310, 18, gold);
         }
         else if (local_game.state == game_state_wave_break) {
-            char timer_text[64];
-            snprintf(timer_text, sizeof(timer_text), "Next wave in: %.0f", local_game.wave_break_timer);
+            char timer_text[128];
+            snprintf(timer_text, sizeof(timer_text), "Next wave in: %.0f", (double)local_game.wave_break_timer);
             draw_rectangle(200, 250, 400, 80, (color){0, 0, 0, 200});
             draw_text(timer_text, 260, 280, 24, green);
         }
@@ -401,16 +403,17 @@ void run_multiplayer_client_game(network_state* net, int window_width, int windo
             if (is_mouse_button_pressed(mouse_button_left)) {
                 const upgrade_result result = upgrade_clicked_tower(&local_game, grid_pos);
                 switch (result) {
-                    case upgrade_success:
+                    case upgrade_success: {
                         // Send tower upgrade to opponent
                         typedef struct { uint8_t spot; uint8_t level; } tower_upgrade_data;
                         tower_upgrade_data upgrade_data = {
                             .spot = (uint8_t)spot_index,
-                            .level = hovered_tower ? hovered_tower->data.tower.level : 0
+                            .level = (uint8_t)(hovered_tower ? hovered_tower->data.tower.level : 0)
                         };
                         network_message msg = network_create_message(msg_tower_upgrade, &upgrade_data, sizeof(upgrade_data));
                         network_send(net, &msg);
                         break;
+                    }
                     case upgrade_insufficient_funds:
                     case upgrade_max_level:
                         break;
@@ -424,6 +427,8 @@ void run_multiplayer_client_game(network_state* net, int window_width, int windo
                                 network_send(net, &build_msg);
                             }
                         }
+                        break;
+                    default:
                         break;
                 }
             }
@@ -491,7 +496,7 @@ void run_multiplayer_client_game(network_state* net, int window_width, int windo
 
                 // Sync wave start with opponent
                 typedef struct { uint8_t wave; } wave_start_data;
-                wave_start_data data = { .wave = local_game.current_wave };
+                wave_start_data data = { .wave = (uint8_t)local_game.current_wave };
                 network_message wave_msg = network_create_message(msg_wave_start, &data, sizeof(data));
                 network_send(net, &wave_msg);
             }
@@ -531,7 +536,7 @@ void run_multiplayer_client_game(network_state* net, int window_width, int windo
             local_game.player_money -= cost;
 
             typedef struct { uint8_t count; } send_enemy_data;
-            send_enemy_data data = { .count = enemy_count };
+            send_enemy_data data = { .count = (uint8_t)enemy_count };
             network_message msg = network_create_message(msg_send_enemies, &data, sizeof(data));
             if (network_send(net, &msg)) {
             } else {
@@ -646,6 +651,9 @@ void run_multiplayer_client_game(network_state* net, int window_width, int windo
                     break;
                 }
 
+                case msg_disconnect:
+                case msg_discover_request:
+                case msg_discover_response:
                 default:
                     break;
             }
@@ -667,8 +675,8 @@ void run_multiplayer_client_game(network_state* net, int window_width, int windo
             draw_text("Waiting for opponent...", 220, 310, 18, gold);
         }
         else if (local_game.state == game_state_wave_break) {
-            char timer_text[64];
-            snprintf(timer_text, sizeof(timer_text), "Next wave in: %.0f", local_game.wave_break_timer);
+            char timer_text[128];
+            snprintf(timer_text, sizeof(timer_text), "Next wave in: %.0f", (double)local_game.wave_break_timer);
             draw_rectangle(200, 250, 400, 80, (color){0, 0, 0, 200});
             draw_text(timer_text, 260, 280, 24, green);
         }

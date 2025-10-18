@@ -51,17 +51,17 @@ void set_viewport(int x, int y, int width, int height);
 void reset_viewport(void);
 void begin_drawing(void);
 void end_drawing(void);
-void clear_background(color color);
+void clear_background(color c);
 int get_screen_width(void);
 int get_screen_height(void);
 float get_frame_time(void);
 
 texture_2d load_texture(const char* file_name);
 void unload_texture(texture_2d texture);
-void draw_texture_pro(texture_2d texture, rectangle source, rectangle dest, vector2 origin, float rotation, color tint);
-void draw_rectangle(int pos_x, int pos_y, int width, int height, color color);
-void draw_rectangle_lines(int pos_x, int pos_y, int width, int height, color color);
-void draw_text(const char* text, int pos_x, int pos_y, int font_size, color color);
+void draw_texture_pro(texture_2d texture, rectangle source, rectangle dest, vector2 origin, float rotation, color c);
+void draw_rectangle(int pos_x, int pos_y, int width, int height, color c);
+void draw_rectangle_lines(int pos_x, int pos_y, int width, int height, color c);
+void draw_text(const char* text, int pos_x, int pos_y, int font_size, color c);
 int measure_text(const char* text, int font_size);
 void draw_fps(int pos_x, int pos_y);
 

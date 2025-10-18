@@ -43,27 +43,25 @@ game_object create_projectile(const vector2 start_pos, const vector2 target_pos,
     };
 }
 
-void update_projectile(const game *game, game_object *projectile, const float delta_time) {
-    if (game == nullptr || projectile == nullptr || game->game_objects == nullptr) return;
+void update_projectile(const game *g, game_object *proj, const float delta_time) {
+    if (g == nullptr || proj == nullptr || g->game_objects == nullptr) return;
 
-    if (!projectile->is_active) {
+    if (!proj->is_active) {
         return;
     }
 
-    projectile->data.projectile.frame_timer += delta_time;
-    if (projectile->data.projectile.frame_timer >= ICEBALL_FRAME_DURATION) {
-        projectile->data.projectile.frame_timer = 0.0f;
-        projectile->data.projectile.current_frame++;
-        if (projectile->data.projectile.current_frame >= ICEBALL_FRAMES) {
-            projectile->data.projectile.current_frame = 0;
-        }
+    proj->data.projectile.frame_timer += delta_time;
+    if (proj->data.projectile.frame_timer >= ICEBALL_FRAME_DURATION) {
+        proj->data.projectile.frame_timer = 0.0f;
+        constexpr int max_frames = ICEBALL_FRAMES;
+        proj->data.projectile.current_frame = (proj->data.projectile.current_frame + 1) % max_frames;
     }
 
-    const int target_id = projectile->data.projectile.target_id;
+    const int target_id = proj->data.projectile.target_id;
     game_object* target = nullptr;
 
-    for (size_t i = 0; i < game->object_count; i++) {
-        game_object* obj = &game->game_objects[i];
+    for (size_t i = 0; i < g->object_count; i++) {
+        game_object* obj = &g->game_objects[i];
 
         if (obj->type != enemy || obj->id != target_id) {
             continue;
@@ -76,34 +74,38 @@ void update_projectile(const game *game, game_object *projectile, const float de
     }
 
     if (target != nullptr) {
-        const float dx = target->position.x - projectile->position.x;
-        const float dy = target->position.y - projectile->position.y;
+        const float dx = target->position.x - proj->position.x;
+        const float dy = target->position.y - proj->position.y;
 
         const float length = sqrtf(dx * dx + dy * dy);
         if (length > 0.001f) {
             const float inv_length = 1.0f / length;
-            projectile->data.projectile.velocity.x = dx * inv_length * PROJECTILE_SPEED;
-            projectile->data.projectile.velocity.y = dy * inv_length * PROJECTILE_SPEED;
+            proj->data.projectile.velocity.x = dx * inv_length * PROJECTILE_SPEED;
+            proj->data.projectile.velocity.y = dy * inv_length * PROJECTILE_SPEED;
         }
     }
 
-    projectile->position.x += projectile->data.projectile.velocity.x * delta_time;
-    projectile->position.y += projectile->data.projectile.velocity.y * delta_time;
+    proj->position.x += proj->data.projectile.velocity.x * delta_time;
+    proj->position.y += proj->data.projectile.velocity.y * delta_time;
 
-    if (projectile->position.x < -2 || projectile->position.x > 26 ||
-        projectile->position.y < -2 || projectile->position.y > 20) {
-        projectile->is_active = false;
+    constexpr float max_x = 26.0f;
+    constexpr float max_y = 20.0f;
+    constexpr float min_pos = -2.0f;
+
+    if (proj->position.x < min_pos || proj->position.x > max_x ||
+        proj->position.y < min_pos || proj->position.y > max_y) {
+        proj->is_active = false;
         return;
     }
 
     constexpr float collision_dist_sq = 1.0f;
 
     if (target != nullptr) {
-        const float dx = target->position.x - projectile->position.x;
-        const float dy = target->position.y - projectile->position.y;
+        const float dx = target->position.x - proj->position.x;
+        const float dy = target->position.y - proj->position.y;
 
         if (dx * dx + dy * dy < collision_dist_sq) {
-            target->data.enemy.health -= projectile->data.projectile.damage;
+            target->data.enemy.health -= proj->data.projectile.damage;
 
             if (target->data.enemy.health > 0) {
                 target->data.enemy.anim_state = enemy_anim_hit;
@@ -111,13 +113,13 @@ void update_projectile(const game *game, game_object *projectile, const float de
                 target->data.enemy.frame_timer = 0.0f;
             }
 
-            projectile->is_active = false;
+            proj->is_active = false;
             return;
         }
     }
 
-    for (size_t i = 0; i < game->object_count; i++) {
-        game_object* obj = &game->game_objects[i];
+    for (size_t i = 0; i < g->object_count; i++) {
+        game_object* obj = &g->game_objects[i];
 
         if (obj->type != enemy || !obj->is_active || obj->data.enemy.anim_state == enemy_anim_die) {
             continue;
@@ -127,15 +129,15 @@ void update_projectile(const game *game, game_object *projectile, const float de
             continue;
         }
 
-        const float dx = obj->position.x - projectile->position.x;
-        const float dy = obj->position.y - projectile->position.y;
+        const float dx = obj->position.x - proj->position.x;
+        const float dy = obj->position.y - proj->position.y;
 
         if (fabsf(dx) > 1.0f || fabsf(dy) > 1.0f) {
             continue;
         }
 
         if (dx * dx + dy * dy < collision_dist_sq) {
-            obj->data.enemy.health -= projectile->data.projectile.damage;
+            obj->data.enemy.health -= proj->data.projectile.damage;
 
             if (obj->data.enemy.health > 0) {
                 obj->data.enemy.anim_state = enemy_anim_hit;
@@ -143,7 +145,7 @@ void update_projectile(const game *game, game_object *projectile, const float de
                 obj->data.enemy.frame_timer = 0.0f;
             }
 
-            projectile->is_active = false;
+            proj->is_active = false;
             return;
         }
     }

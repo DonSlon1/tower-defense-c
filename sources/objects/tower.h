@@ -22,12 +22,12 @@ typedef struct game game;
 
 game_object init_tower(vector2 position);
 
-upgrade_result upgrade_clicked_tower(game *game, grid_coord grid_coord);
+upgrade_result upgrade_clicked_tower(game *g, grid_coord coord);
 
 sprite_info get_tower_sprites(tower_level level);
 
-void update_tower(game *game, game_object *tower, float delta_time);
+void update_tower(game *g, game_object *twr, float delta_time);
 
-int find_nearest_enemy_in_range(const game *game, vector2 tower_pos, float range);
+int find_nearest_enemy_in_range(const game *g, vector2 tower_pos, float range);
 
 #endif //PROJEKT_TOWER_H

@@ -39,45 +39,45 @@ void draw_fullscreen_image(const texture_2d texture) {
     );
 }
 
-void draw_text_with_shadow(const char* text, const int x, const int y, const int size, const color color) {
+void draw_text_with_shadow(const char* text, const int x, const int y, const int size, const color c) {
     draw_text(text, x + 2, y + 2, size, black);
-    draw_text(text, x, y, size, color);
+    draw_text(text, x, y, size, c);
 }
 
-void draw_centered_text_with_shadow(const char* text, const int y, const int size, const color color) {
+void draw_centered_text_with_shadow(const char* text, const int y, const int size, const color c) {
     const int screen_width = get_screen_width();
     const int text_width = measure_text(text, size);
     const int text_x = (screen_width - text_width) / 2;
-    draw_text_with_shadow(text, text_x, y, size, color);
+    draw_text_with_shadow(text, text_x, y, size, c);
 }
 
-texture_2d get_enemy_texture(const game* game, const enemy_type type, const enemy_animation_state state) {
+texture_2d get_enemy_texture(const game* g, const enemy_type type, const enemy_animation_state state) {
     switch (type) {
         case enemy_type_mushroom:
             switch (state) {
-                case enemy_anim_run: return game->assets.mushroom_run;
-                case enemy_anim_hit: return game->assets.mushroom_hit;
-                case enemy_anim_die: return game->assets.mushroom_die;
+                case enemy_anim_run: return g->assets.mushroom_run;
+                case enemy_anim_hit: return g->assets.mushroom_hit;
+                case enemy_anim_die: return g->assets.mushroom_die;
+                default: return g->assets.mushroom_run;
             }
-            break;
         case enemy_type_flying:
             switch (state) {
-                case enemy_anim_run: return game->assets.flying_fly;
-                case enemy_anim_hit: return game->assets.flying_hit;
-                case enemy_anim_die: return game->assets.flying_die;
+                case enemy_anim_run: return g->assets.flying_fly;
+                case enemy_anim_hit: return g->assets.flying_hit;
+                case enemy_anim_die: return g->assets.flying_die;
+                default: return g->assets.flying_fly;
             }
-            break;
+        case enemy_type_count:
         default:
-            return game->assets.mushroom_run;
+            return g->assets.mushroom_run;
     }
-    return game->assets.mushroom_run;
 }
 
-void draw_game_objects(const game* game) {
-    const int tile_size = get_tile_scale(&game->tilemap);
+void draw_game_objects(const game* g) {
+    const int tile_size = get_tile_scale(&g->tilemap);
 
-    for (size_t i = 0; i < game->object_count; i++) {
-        const game_object* obj = &game->game_objects[i];
+    for (size_t i = 0; i < g->object_count; i++) {
+        const game_object* obj = &g->game_objects[i];
 
         if (!obj->is_active) continue;
 
@@ -91,12 +91,12 @@ void draw_game_objects(const game* game) {
             for (int y = 0; y < info.height; y++) {
                 for (int x = 0; x < info.width; x++) {
                     const int sprite = info.sprites[info.width * y + x];
-                    draw_texture(&game->tilemap, game->assets.towers, sprite, (int)obj->position.x + x, (int)obj->position.y + y);
+                    draw_texture(&g->tilemap, g->assets.towers, sprite, (int)obj->position.x + x, (int)obj->position.y + y);
                 }
             }
         }
         else if (obj->type == enemy) {
-            const texture_2d texture = get_enemy_texture(game, obj->data.enemy.type, obj->data.enemy.anim_state);
+            const texture_2d texture = get_enemy_texture(g, obj->data.enemy.type, obj->data.enemy.anim_state);
             const int frame_count = get_enemy_frame_count(obj->data.enemy.type, obj->data.enemy.anim_state);
 
             if (texture.id == 0 || frame_count == 0) {
@@ -132,7 +132,7 @@ void draw_game_objects(const game* game) {
             draw_texture_pro(texture, source, dest, (vector2){0, 0}, 0.0f, white);
         }
         else if (obj->type == projectile) {
-            const texture_2d iceball = game->assets.iceball;
+            const texture_2d iceball = g->assets.iceball;
 
             if (iceball.id == 0) {
                 continue;
@@ -169,8 +169,8 @@ void draw_game_objects(const game* game) {
     }
 }
 
-void draw_start_screen(const game* game) {
-    draw_fullscreen_image(game->assets.start_screen);
+void draw_start_screen(const game* g) {
+    draw_fullscreen_image(g->assets.start_screen);
 
     const int screen_height = get_screen_height();
     const int y_position = screen_height * 4 / 5;
@@ -178,52 +178,52 @@ void draw_start_screen(const game* game) {
     draw_centered_text_with_shadow("PRESS SPACE TO START", y_position, 35, white);
 }
 
-void draw_game_over_screen(const game* game) {
-    draw_fullscreen_image(game->assets.defeat_screen);
+void draw_game_over_screen(const game* g) {
+    draw_fullscreen_image(g->assets.defeat_screen);
 
     const int screen_height = get_screen_height();
 
     char wave_text[256];
-    snprintf(wave_text, sizeof(wave_text), "Wave Reached: %d", game->current_wave + 1);
+    snprintf(wave_text, sizeof(wave_text), "Wave Reached: %d", g->current_wave + 1);
     draw_centered_text_with_shadow(wave_text, screen_height / 2 + 10, 35, (color){255, 200, 0, 255});
 
     char stats_text[256];
-    snprintf(stats_text, sizeof(stats_text), "Enemies Defeated: %d", game->enemies_defeated);
+    snprintf(stats_text, sizeof(stats_text), "Enemies Defeated: %d", g->enemies_defeated);
     draw_centered_text_with_shadow(stats_text, screen_height / 2 + 55, 35, white);
 
     char money_text[256];
-    snprintf(money_text, sizeof(money_text), "Final Money: $%d", game->player_money);
+    snprintf(money_text, sizeof(money_text), "Final Money: $%d", g->player_money);
     draw_centered_text_with_shadow(money_text, screen_height / 2 + 100, 35, gold);
 
     draw_centered_text_with_shadow("PRESS SPACE TO RESTART", screen_height - 80, 30, lightgray);
 }
 
-void draw_hud(const game* game) {
+void draw_hud(const game* g) {
     const int screen_width = get_screen_width();
 
     draw_rectangle(0, 0, screen_width, 50, (color){0, 0, 0, 180});
 
     char lives_text[64];
-    snprintf(lives_text, sizeof(lives_text), "Lives: %d", game->player_lives);
+    snprintf(lives_text, sizeof(lives_text), "Lives: %d", g->player_lives);
     draw_text(lives_text, 20, 15, 25, red);
 
     char money_text[64];
-    snprintf(money_text, sizeof(money_text), "$%d", game->player_money);
+    snprintf(money_text, sizeof(money_text), "$%d", g->player_money);
     const int money_x = screen_width / 3;
     draw_text(money_text, money_x, 15, 25, gold);
 
     char score_text[64];
-    snprintf(score_text, sizeof(score_text), "Score: %d", game->enemies_defeated);
+    snprintf(score_text, sizeof(score_text), "Score: %d", g->enemies_defeated);
     const int score_x = screen_width * 2 / 3;
     draw_text(score_text, score_x, 15, 25, skyblue);
 }
 
-void draw_wave_info(const game* game) {
-    const int tile_size = get_tile_scale(&game->tilemap);
-    const int map_width_pixels = game->tilemap.map_width * tile_size;
+void draw_wave_info(const game* g) {
+    const int tile_size = get_tile_scale(&g->tilemap);
+    const int map_width_pixels = g->tilemap.map_width * tile_size;
 
     char wave_text[64];
-    snprintf(wave_text, sizeof(wave_text), "Wave %d", game->current_wave + 1);
+    snprintf(wave_text, sizeof(wave_text), "Wave %d", g->current_wave + 1);
 
     constexpr int font_size = 30;
     const int text_width = measure_text(wave_text, font_size);
@@ -234,10 +234,10 @@ void draw_wave_info(const game* game) {
 
     draw_text(wave_text, x, y, font_size, (color){255, 200, 0, 255});
 
-    const wave_config wave = get_wave_config(game->current_wave);
+    const wave_config wave = get_wave_config(g->current_wave);
     char progress_text[64];
     snprintf(progress_text, sizeof(progress_text), "%d/%d enemies",
-             game->enemies_spawned_in_wave, wave.enemy_count);
+             g->enemies_spawned_in_wave, wave.enemy_count);
 
     constexpr int progress_font_size = 18;
     const int progress_width = measure_text(progress_text, progress_font_size);
@@ -247,24 +247,24 @@ void draw_wave_info(const game* game) {
     draw_text(progress_text, progress_x, progress_y, progress_font_size, (color){200, 200, 200, 255});
 }
 
-void draw_wave_break_screen(const game* game) {
+void draw_wave_break_screen(const game* g) {
     const int screen_width = get_screen_width();
     const int screen_height = get_screen_height();
 
     draw_rectangle(0, 0, screen_width, screen_height, (color){0, 0, 0, 150});
 
     char complete_text[64];
-    snprintf(complete_text, sizeof(complete_text), "WAVE %d COMPLETE!", game->current_wave + 1);
+    snprintf(complete_text, sizeof(complete_text), "WAVE %d COMPLETE!", g->current_wave + 1);
     draw_centered_text_with_shadow(complete_text, screen_height / 2 - 80, 50, green);
 
-    const wave_config next_wave = get_wave_config(game->current_wave + 1);
+    const wave_config next_wave = get_wave_config(g->current_wave + 1);
     char next_wave_text[128];
     snprintf(next_wave_text, sizeof(next_wave_text), "Next: Wave %d (%d enemies)",
-             game->current_wave + 2, next_wave.enemy_count);
+             g->current_wave + 2, next_wave.enemy_count);
     draw_centered_text_with_shadow(next_wave_text, screen_height / 2 - 20, 30, skyblue);
 
     char timer_text[64];
-    snprintf(timer_text, sizeof(timer_text), "Starting in %.0f seconds...", game->wave_break_timer);
+    snprintf(timer_text, sizeof(timer_text), "Starting in %.0f seconds...", (double)g->wave_break_timer);
     draw_centered_text_with_shadow(timer_text, screen_height / 2 + 20, 25, white);
 
     draw_centered_text_with_shadow("PRESS SPACE TO START NOW", screen_height / 2 + 60, 20, lightgray);
@@ -281,7 +281,7 @@ void draw_tower_info(const game_object* tower_object, const int x, const int y) 
 
     const char* tower_name = "Ice Tower";
     char level_text[32];
-    snprintf(level_text, sizeof(level_text), "Level %d", tower_object->data.tower.level);
+    snprintf(level_text, sizeof(level_text), "Level %u", tower_object->data.tower.level);
 
     constexpr int padding = 10;
     constexpr int font_size = 20;
@@ -300,11 +300,11 @@ void draw_tower_info(const game_object* tower_object, const int x, const int y) 
     draw_text(level_text, x + padding, y + padding * 2 + font_size, font_size, gold);
 }
 
-void draw_tower_spots(const game* game) {
-    const int tile_size = get_tile_scale(&game->tilemap);
+void draw_tower_spots(const game* g) {
+    const int tile_size = get_tile_scale(&g->tilemap);
 
     for (int i = 0; i < 4; i++) {
-        const tower_spot* spot = &game->tower_spots[i];
+        const tower_spot* spot = &g->tower_spots[i];
 
         if (!spot->occupied) {
             const int x = (int)spot->position.x * tile_size;

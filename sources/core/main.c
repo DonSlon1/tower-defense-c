@@ -4,9 +4,6 @@
 #include "network.h"
 #include "multiplayer_game.h"
 
-void handle_playing_input(game *game);
-void spawn_enemy(game *game);
-
 #define MENU_WIDTH 800
 #define MENU_HEIGHT 600
 #define MULTIPLAYER_WIDTH 1600
@@ -80,7 +77,7 @@ int main(void)
                 printf("Hosting on port %d...\n", port);
                 fflush(stdout);
 
-                active_network = network_create_host(port);
+                active_network = network_create_host((uint16_t)port);
 
                 if (active_network) {
                     printf("Server socket created, listening for connections...\n");
@@ -93,7 +90,7 @@ int main(void)
                 }
             } else {
                 printf("Connecting to %s:%d...\n", ip, port);
-                active_network = network_connect(ip, port);
+                active_network = network_connect(ip, (uint16_t)port);
                 if (active_network) {
                     printf("SUCCESS: Connected to server!\n");
                     printf("Starting multiplayer game...\n");

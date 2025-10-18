@@ -27,43 +27,43 @@ game_object init_tower(const vector2 position) {
     };
 }
 
-upgrade_result upgrade_clicked_tower(game *game, const grid_coord grid_coord) {
-    if (game == nullptr || game->game_objects == nullptr) {
+upgrade_result upgrade_clicked_tower(game *g, const grid_coord coord) {
+    if (g == nullptr || g->game_objects == nullptr) {
         return upgrade_not_found;
     }
 
-    for (size_t i = 0; i < game->object_count; i++) {
-        if (game->game_objects[i].type != tower) {
+    for (size_t i = 0; i < g->object_count; i++) {
+        if (g->game_objects[i].type != tower) {
             continue;
         }
-        game_object* tower = &game->game_objects[i];
+        game_object* twr = &g->game_objects[i];
 
-        const int tower_grid_x = (int)tower->position.x;
-        const int tower_grid_y = (int)tower->position.y;
-        const int tower_width  = tower->data.tower.width;
-        const int tower_height = tower->data.tower.height;
+        const int tower_grid_x = (int)twr->position.x;
+        const int tower_grid_y = (int)twr->position.y;
+        const int tower_width  = twr->data.tower.width;
+        const int tower_height = twr->data.tower.height;
 
-        const bool is_inside = grid_coord.x >= tower_grid_x &&
-                               grid_coord.x < tower_grid_x + tower_width &&
-                               grid_coord.y >= tower_grid_y &&
-                               grid_coord.y < tower_grid_y + tower_height;
+        const bool is_inside = coord.x >= tower_grid_x &&
+                               coord.x < tower_grid_x + tower_width &&
+                               coord.y >= tower_grid_y &&
+                               coord.y < tower_grid_y + tower_height;
 
         if (is_inside) {
-            if (tower->data.tower.level >= level_1) {
+            if (twr->data.tower.level >= level_1) {
                 return upgrade_max_level;
             }
 
-            if (game->player_money < tower->data.tower.upgrade_cost) {
+            if (g->player_money < twr->data.tower.upgrade_cost) {
                 return upgrade_insufficient_funds;
             }
 
-            tower->data.tower.level++;
-            game->player_money -= tower->data.tower.upgrade_cost;
+            twr->data.tower.level++;
+            g->player_money -= twr->data.tower.upgrade_cost;
 
-            if (tower->data.tower.level == level_1) {
-                tower->data.tower.damage = TOWER_LEVEL_1_DAMAGE;
-                tower->data.tower.range = TOWER_LEVEL_1_RANGE;
-                tower->data.tower.fire_cooldown = TOWER_LEVEL_1_FIRE_COOLDOWN;
+            if (twr->data.tower.level == level_1) {
+                twr->data.tower.damage = TOWER_LEVEL_1_DAMAGE;
+                twr->data.tower.range = TOWER_LEVEL_1_RANGE;
+                twr->data.tower.fire_cooldown = TOWER_LEVEL_1_FIRE_COOLDOWN;
             }
 
             return upgrade_success;
@@ -100,14 +100,15 @@ sprite_info get_tower_sprites(const tower_level level) {
             info.width = 4;
             info.height = 4;
             break;
+        case level_max:
         default:
             fprintf(stderr, "WARNING: Failed to find sprite for tower level\n");
     }
     return info;
 }
 
-int find_nearest_enemy_in_range(const game *game, const vector2 tower_pos, const float range) {
-    if (game == nullptr || game->game_objects == nullptr) {
+int find_nearest_enemy_in_range(const game *g, const vector2 tower_pos, const float range) {
+    if (g == nullptr || g->game_objects == nullptr) {
         return -1;
     }
 
@@ -116,8 +117,8 @@ int find_nearest_enemy_in_range(const game *game, const vector2 tower_pos, const
 
     const vector2 tower_center = {tower_pos.x + 2.0f, tower_pos.y + 2.0f};
 
-    for (size_t i = 0; i < game->object_count; i++) {
-        const game_object* obj = &game->game_objects[i];
+    for (size_t i = 0; i < g->object_count; i++) {
+        const game_object* obj = &g->game_objects[i];
 
         if (obj->type != enemy || !obj->is_active) {
             continue;
@@ -140,44 +141,44 @@ int find_nearest_enemy_in_range(const game *game, const vector2 tower_pos, const
     return nearest_id;
 }
 
-void update_tower(game *game, game_object *tower, const float delta_time) {
-    if (game == nullptr || tower == nullptr) return;
+void update_tower(game *g, game_object *twr, const float delta_time) {
+    if (g == nullptr || twr == nullptr) return;
 
-    if (!tower->is_active || tower->data.tower.level == level_0) {
+    if (!twr->is_active || twr->data.tower.level == level_0) {
         return;
     }
 
-    if (tower->data.tower.fire_cooldown > 0) {
-        tower->data.tower.fire_cooldown -= delta_time;
+    if (twr->data.tower.fire_cooldown > 0) {
+        twr->data.tower.fire_cooldown -= delta_time;
     }
 
-    const vector2 tower_pos = tower->position;
-    const int target_id = find_nearest_enemy_in_range(game, tower_pos, tower->data.tower.range);
+    const vector2 tower_pos = twr->position;
+    const int target_id = find_nearest_enemy_in_range(g, tower_pos, twr->data.tower.range);
 
     if (target_id == -1) {
-        tower->data.tower.target_id = -1;
+        twr->data.tower.target_id = -1;
         return;
     }
 
-    tower->data.tower.target_id = target_id;
+    twr->data.tower.target_id = target_id;
 
-    if (tower->data.tower.fire_cooldown <= 0) {
-        for (size_t i = 0; i < game->object_count; i++) {
-            if (game->game_objects[i].id == target_id && game->game_objects[i].is_active) {
+    if (twr->data.tower.fire_cooldown <= 0) {
+        for (size_t i = 0; i < g->object_count; i++) {
+            if (g->game_objects[i].id == target_id && g->game_objects[i].is_active) {
                 const vector2 tower_center = {tower_pos.x + 2.0f, tower_pos.y + 2.0f};
-                const vector2 target_pos = game->game_objects[i].position;
+                const vector2 target_pos = g->game_objects[i].position;
 
-                const game_object projectile = create_projectile(
+                const game_object proj = create_projectile(
                     tower_center,
                     target_pos,
-                    tower->data.tower.damage,
-                    tower->id,
+                    twr->data.tower.damage,
+                    twr->id,
                     target_id
                 );
 
-                add_game_object(game, projectile);
+                add_game_object(g, proj);
 
-                tower->data.tower.fire_cooldown = TOWER_LEVEL_1_FIRE_COOLDOWN;
+                twr->data.tower.fire_cooldown = TOWER_LEVEL_1_FIRE_COOLDOWN;
                 break;
             }
         }

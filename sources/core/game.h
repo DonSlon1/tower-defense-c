@@ -74,18 +74,21 @@ typedef struct game {
 } game;
 
 game init_game();
-void add_game_object(game *game, game_object game_object);
-void grow_object_capacity(game *game);
-void start_game(game *game);
-void unload_game(game *game);
+void add_game_object(game *g, game_object obj);
+void grow_object_capacity(game *g);
+void start_game(game *g);
+void unload_game(game *g);
 grid_coord screen_to_grid(vector2 screen_pos, const tile_map* tilemap);
-int get_game_objects_of_type(const game *game, object_type type, game_object **out_objects);
-void update_game_state(game *game, float delta_time);
-void remove_inactive_objects(game *game);
-game_object* find_tower_at_grid(const game *game, grid_coord grid_coord);
-int find_tower_spot_at_grid(const game *game, grid_coord grid_coord);
-bool try_build_tower(game *game, int spot_index);
+int get_game_objects_of_type(const game *g, object_type type, game_object **out_objects);
+void update_game_state(game *g, float delta_time);
+void remove_inactive_objects(game *g);
+game_object* find_tower_at_grid(const game *g, grid_coord coord);
+int find_tower_spot_at_grid(const game *g, grid_coord coord);
+bool try_build_tower(game *g, int spot_index);
 wave_config get_wave_config(int wave_number);
-void start_next_wave(game *game);
+void start_next_wave(game *g);
+void handle_playing_input(game *g);
+void spawn_enemy(game *g);
+void reset_game(game *g);
 
 #endif //PROJEKT_GAME_H

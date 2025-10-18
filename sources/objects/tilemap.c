@@ -75,7 +75,7 @@ tile_map init_tilemap() {
     return map;
 }
 
-void draw_layer(const tile_map* map, const int layer[MAP_HEIGHT][MAP_WIDTH], const texture_2d tileset) {
+static void draw_layer(const tile_map* map, const int layer[MAP_HEIGHT][MAP_WIDTH], const texture_2d tileset) {
 
     for (int y = 0; y < map->map_height; y++) {
         for (int x = 0; x < map->map_width; x++) {
@@ -89,7 +89,7 @@ void draw_layer(const tile_map* map, const int layer[MAP_HEIGHT][MAP_WIDTH], con
         }
     }
 }
-int tiles_per_row(const tile_map* map, const texture_2d tileset) {
+static int tiles_per_row(const tile_map* map, const texture_2d tileset) {
     if (map->tile_size == 0) {
         return 0;
     }

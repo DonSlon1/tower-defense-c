@@ -305,8 +305,7 @@ void discovery_host_update(session_discovery* disc) {
                     .game_port = disc->game_port
                 };
 
-                strncpy(response.host_name, disc->host_name, sizeof(response.host_name) - 1);
-                response.host_name[sizeof(response.host_name) - 1] = '\0';
+                snprintf(response.host_name, sizeof(response.host_name), "%s", disc->host_name);
 
                 // Send directly to requester
                 disc->packet->len = sizeof(discovery_packet);

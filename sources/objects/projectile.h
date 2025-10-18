@@ -11,6 +11,6 @@ typedef struct game game;
 
 game_object create_projectile(vector2 start_pos, vector2 target_pos, float damage, int owner_id, int target_id);
 
-void update_projectile(const game *game, game_object *projectile, float delta_time);
+void update_projectile(const game *g, game_object *proj, float delta_time);
 
 #endif //PROJEKT_PROJECTILE_H

@@ -37,6 +37,7 @@ enemy_stats get_enemy_stats(const enemy_type type) {
             return (enemy_stats) { .health = 80.0f, .speed = 1.5f, .gold_reward = 25 };
         case enemy_type_flying:
             return (enemy_stats) { .health = 50.0f, .speed = 3.5f, .gold_reward = 15 };
+        case enemy_type_count:
         default:
             return (enemy_stats) { .health = 80.0f, .speed = 1.5f, .gold_reward = 25 };
     }
@@ -49,112 +50,112 @@ int get_enemy_frame_count(const enemy_type type, const enemy_animation_state sta
                 case enemy_anim_run: return mushroom_run_frames;
                 case enemy_anim_hit: return mushroom_hit_frames;
                 case enemy_anim_die: return mushroom_die_frames;
+                default: return mushroom_run_frames;
             }
-            break;
         case enemy_type_flying:
             switch (state) {
                 case enemy_anim_run: return flying_fly_frames;
                 case enemy_anim_hit: return flying_hit_frames;
                 case enemy_anim_die: return flying_die_frames;
+                default: return flying_fly_frames;
             }
-            break;
+        case enemy_type_count:
         default:
             return 1;
     }
-    return 1;
 }
 
-void update_enemy_animation(game_object* const enemy, const float delta_time) {
-    if (enemy == nullptr) return;
+void update_enemy_animation(game_object* const en, const float delta_time) {
+    if (en == nullptr) return;
 
-    enemy->data.enemy.frame_timer += delta_time;
+    en->data.enemy.frame_timer += delta_time;
 
-    if (enemy->data.enemy.frame_timer >= anim_frame_duration) {
-        enemy->data.enemy.frame_timer = 0.0f;
-        enemy->data.enemy.current_frame++;
+    if (en->data.enemy.frame_timer >= anim_frame_duration) {
+        en->data.enemy.frame_timer = 0.0f;
+        en->data.enemy.current_frame++;
 
-        const int max_frames = get_enemy_frame_count(enemy->data.enemy.type, enemy->data.enemy.anim_state);
+        const int max_frames = get_enemy_frame_count(en->data.enemy.type, en->data.enemy.anim_state);
 
-        if (enemy->data.enemy.anim_state == enemy_anim_die) {
-            if (enemy->data.enemy.current_frame >= max_frames) {
-                enemy->data.enemy.current_frame = max_frames - 1;
-                enemy->is_active = false;
+        if (en->data.enemy.anim_state == enemy_anim_die) {
+            if (en->data.enemy.current_frame >= max_frames) {
+                en->data.enemy.current_frame = max_frames - 1;
+                en->is_active = false;
             }
-        } else if (enemy->data.enemy.anim_state == enemy_anim_hit) {
-            if (enemy->data.enemy.current_frame >= max_frames) {
-                enemy->data.enemy.anim_state = enemy_anim_run;
-                enemy->data.enemy.current_frame = 0;
+        } else if (en->data.enemy.anim_state == enemy_anim_hit) {
+            if (en->data.enemy.current_frame >= max_frames) {
+                en->data.enemy.anim_state = enemy_anim_run;
+                en->data.enemy.current_frame = 0;
             }
         } else {
-            if (enemy->data.enemy.current_frame >= max_frames) {
-                enemy->data.enemy.current_frame = 0;
+            if (en->data.enemy.current_frame >= max_frames) {
+                en->data.enemy.current_frame = 0;
             }
         }
     }
 }
 
-void update_enemy(game_object* const enemy, const float delta_time) {
-    if (enemy == nullptr) return;
+void update_enemy(game_object* const en, const float delta_time) {
+    if (en == nullptr) return;
 
-    if (!enemy->is_active) {
+    if (!en->is_active) {
         return;
     }
 
-    update_enemy_animation(enemy, delta_time);
+    update_enemy_animation(en, delta_time);
 
-    if (enemy->data.enemy.anim_state == enemy_anim_die) {
+    if (en->data.enemy.anim_state == enemy_anim_die) {
         return;
     }
 
-    if (enemy->data.enemy.health <= 0) {
-        enemy->data.enemy.anim_state = enemy_anim_die;
-        enemy->data.enemy.current_frame = 0;
-        enemy->data.enemy.frame_timer = 0.0f;
+    if (en->data.enemy.health <= 0) {
+        en->data.enemy.anim_state = enemy_anim_die;
+        en->data.enemy.current_frame = 0;
+        en->data.enemy.frame_timer = 0.0f;
         return;
     }
 
-    const int path_id = enemy->data.enemy.path_id;
+    const int path_id = en->data.enemy.path_id;
 
     if (path_id < 0 || path_id >= 2) {
-        enemy->is_active = false;
+        en->is_active = false;
         return;
     }
 
     const int waypoint_count = path_counts[path_id];
     const vector2* const current_path = paths[path_id];
 
-    if (enemy->data.enemy.waypoint_index >= waypoint_count) {
-        enemy->is_active = false;
+    if (en->data.enemy.waypoint_index >= waypoint_count) {
+        en->is_active = false;
         return;
     }
 
-    const vector2 target_pos = current_path[enemy->data.enemy.waypoint_index];
+    const vector2 target_pos = current_path[en->data.enemy.waypoint_index];
     const vector2 direction = {
-        target_pos.x - enemy->position.x,
-        target_pos.y - enemy->position.y
+        target_pos.x - en->position.x,
+        target_pos.y - en->position.y
     };
 
     const float distance = sqrtf(direction.x * direction.x + direction.y * direction.y);
 
     if (distance < waypoint_reached_threshold) {
-        enemy->position = target_pos;
-        enemy->data.enemy.waypoint_index++;
+        en->position = target_pos;
+        en->data.enemy.waypoint_index++;
     } else {
         const float abs_dx = fabsf(direction.x);
         const float abs_dy = fabsf(direction.y);
-        const float distance_to_move = enemy->data.enemy.speed * delta_time;
+        const float distance_to_move = en->data.enemy.speed * delta_time;
 
         if (abs_dx > abs_dy) {
             if (abs_dx <= distance_to_move) {
-                enemy->position.x = target_pos.x;
+                en->position.x = target_pos.x;
             } else {
-                enemy->position.x += (direction.x > 0 ? 1.0f : -1.0f) * distance_to_move;
+                en->position.x += (direction.x > 0 ? 1.0f : -1.0f) * distance_to_move;
             }
         } else {
             if (abs_dy <= distance_to_move) {
-                enemy->position.y = target_pos.y;
+                en->position.y = target_pos.y;
             } else {
-                enemy->position.y += (direction.y > 0 ? 1.0f : -1.0f) * distance_to_move;
+                en->position.y += (direction.y > 0 ? 1.0f : -1.0f) * distance_to_move;
             }
         }
     }
@@ -168,6 +169,7 @@ sprite_info get_enemy_sprites(const enemy_type type, const enemy_animation_state
         case enemy_type_flying:
             info.count = get_enemy_frame_count(type, state);
             break;
+        case enemy_type_count:
         default:
             fprintf(stderr, "ERROR: Unknown enemy type\n");
             info.count = 1;
