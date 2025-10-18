@@ -35,7 +35,8 @@ network_state* network_create_host(const uint16_t port) {
     }
 
     // Open server socket
-    const TCPsocket server = SDLNet_TCP_Open(&ip);
+    // ReSharper disable once CppLocalVariableMayBeConst
+    TCPsocket server = SDLNet_TCP_Open(&ip);
     if (!server) {
         fprintf(stderr, "ERROR: SDLNet_TCP_Open failed: %s\n", SDLNet_GetError());
         free(net);
@@ -61,7 +62,9 @@ bool network_host_check_for_client(network_state* net) {
     }
 
     // Try to accept a connection (non-blocking)
+    // ReSharper disable once CppLocalVariableMayBeConst
     TCPsocket server_socket = net->socket;
+    // ReSharper disable once CppLocalVariableMayBeConst
     TCPsocket client_socket = SDLNet_TCP_Accept(server_socket);
 
     if (client_socket) {
