@@ -258,6 +258,9 @@ static void update_join_ip_menu(menu_system* menu) {
     const vector2 mouse = get_mouse_position();
     const bool clicked = is_mouse_button_pressed(mouse_button_left);
     if (clicked && mouse.x >= 250 && mouse.x <= 550 && mouse.y >= 230 && mouse.y <= 270) {
+        if (!menu->ip_input_active) {
+            start_text_input();
+        }
         menu->ip_input_active = true;
     }
 
@@ -269,12 +272,14 @@ static void update_join_ip_menu(menu_system* menu) {
 
     if (menu->ip_buttons[0].clicked) {
         // Connect
+        stop_text_input();
         menu->current_state = MENU_STATE_CONNECTING;
         menu->ip_input_active = false;
         // Network connection will be attempted in main.c
 
     } else if (menu->ip_buttons[1].clicked) {
         // Cancel
+        stop_text_input();
         menu->current_state = MENU_STATE_MULTIPLAYER_SELECT;
         menu->ip_input_active = false;
     }
@@ -288,11 +293,17 @@ static void update_host_setup(menu_system* menu) {
 
     // Check click on host name field
     if (clicked && mouse.x >= 250 && mouse.x <= 550 && mouse.y >= 210 && mouse.y <= 250) {
+        if (!menu->host_name_input_active) {
+            start_text_input();
+        }
         menu->host_name_input_active = true;
         menu->port_input_active = false;
     }
     // Check click on port field
     else if (clicked && mouse.x >= 250 && mouse.x <= 550 && mouse.y >= 300 && mouse.y <= 340) {
+        if (!menu->port_input_active) {
+            start_text_input();
+        }
         menu->port_input_active = true;
         menu->host_name_input_active = false;
     }
@@ -312,6 +323,7 @@ static void update_host_setup(menu_system* menu) {
 
     if (menu->host_setup_buttons[0].clicked) {
         // Start Hosting
+        stop_text_input();
         menu->port_number = atoi(menu->port_input);
         if (menu->port_number <= 0 || menu->port_number > 65535) {
             menu->port_number = 7777;
@@ -329,6 +341,7 @@ static void update_host_setup(menu_system* menu) {
 
     } else if (menu->host_setup_buttons[1].clicked) {
         // Cancel
+        stop_text_input();
         menu->current_state = MENU_STATE_MULTIPLAYER_SELECT;
         menu->port_input_active = false;
         menu->host_name_input_active = false;

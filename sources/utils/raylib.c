@@ -119,11 +119,12 @@ bool window_should_close(void) {
         }
         if (event.type == SDL_KEYDOWN) {
             keys_pressed[event.key.keysym.scancode] = true;
-
-            // Capture text input for printable characters
-            const SDL_Keycode key = event.key.keysym.sym;
-            if (key >= 32 && key <= 126) {  // Printable ASCII range
-                last_char_pressed = key;
+        }
+        if (event.type == SDL_TEXTINPUT) {
+            // Use SDL's text input event which handles shift, numpad, etc.
+            // Only capture single character input
+            if (event.text.text[0] != '\0' && event.text.text[1] == '\0') {
+                last_char_pressed = (int)(unsigned char)event.text.text[0];
             }
         }
         if (event.type == SDL_MOUSEBUTTONDOWN) {
@@ -334,6 +335,14 @@ vector2 get_mouse_position(void) {
 
 int get_char_pressed(void) {
     return last_char_pressed;
+}
+
+void start_text_input(void) {
+    SDL_StartTextInput();
+}
+
+void stop_text_input(void) {
+    SDL_StopTextInput();
 }
 
 static int get_random_value_internal(const int min, const int max) {

@@ -72,6 +72,8 @@ int get_random_value(int min, int max);
 
 // Text input
 int get_char_pressed(void);  // Returns ASCII char pressed this frame, or 0 if none
+void start_text_input(void);  // Enable text input mode (for shift, numpad support)
+void stop_text_input(void);   // Disable text input mode
 
 void set_mouse_cursor(const char* file_name);
 void set_mouse_pointer(const char* file_name);
