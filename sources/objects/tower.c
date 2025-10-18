@@ -28,7 +28,7 @@ game_object init_tower(const vector2 position) {
 }
 
 upgrade_result upgrade_clicked_tower(game *game, const grid_coord grid_coord) {
-    if (game == nullptr || game->game_objects == nullptr) {
+    if (game == NULL || game->game_objects == NULL) {
         return upgrade_not_found;
     }
 
@@ -85,7 +85,7 @@ sprite_info get_tower_sprites(const tower_level level) {
         24, 25, 26, 27,
         28, 29, 30, 31
     };
-    sprite_info info = { .sprites = nullptr, .count = 0, .width = 0, .height = 0 };
+    sprite_info info = { .sprites = NULL, .count = 0, .width = 0, .height = 0 };
 
     switch (level) {
         case level_0:
@@ -107,7 +107,7 @@ sprite_info get_tower_sprites(const tower_level level) {
 }
 
 int find_nearest_enemy_in_range(const game *game, const vector2 tower_pos, const float range) {
-    if (game == nullptr || game->game_objects == nullptr) {
+    if (game == NULL || game->game_objects == NULL) {
         return -1;
     }
 
@@ -141,7 +141,7 @@ int find_nearest_enemy_in_range(const game *game, const vector2 tower_pos, const
 }
 
 void update_tower(game *game, game_object *tower, const float delta_time) {
-    if (game == nullptr || tower == nullptr) return;
+    if (game == NULL || tower == NULL) return;
 
     if (!tower->is_active || tower->data.tower.level == level_0) {
         return;

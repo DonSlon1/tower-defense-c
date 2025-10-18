@@ -44,7 +44,7 @@ game_object create_projectile(const vector2 start_pos, const vector2 target_pos,
 }
 
 void update_projectile(const game *game, game_object *projectile, const float delta_time) {
-    if (game == nullptr || projectile == nullptr || game->game_objects == nullptr) return;
+    if (game == NULL || projectile == NULL || game->game_objects == NULL) return;
 
     if (!projectile->is_active) {
         return;
@@ -60,7 +60,7 @@ void update_projectile(const game *game, game_object *projectile, const float de
     }
 
     const int target_id = projectile->data.projectile.target_id;
-    game_object* target = nullptr;
+    game_object* target = NULL;
 
     for (size_t i = 0; i < game->object_count; i++) {
         game_object* obj = &game->game_objects[i];
@@ -75,7 +75,7 @@ void update_projectile(const game *game, game_object *projectile, const float de
         }
     }
 
-    if (target != nullptr) {
+    if (target != NULL) {
         const float dx = target->position.x - projectile->position.x;
         const float dy = target->position.y - projectile->position.y;
 
@@ -96,9 +96,9 @@ void update_projectile(const game *game, game_object *projectile, const float de
         return;
     }
 
-    constexpr float collision_dist_sq = 1.0f;
+    const float collision_dist_sq = 1.0f;
 
-    if (target != nullptr) {
+    if (target != NULL) {
         const float dx = target->position.x - projectile->position.x;
         const float dy = target->position.y - projectile->position.y;
 

@@ -16,22 +16,22 @@ network_state* network_create_host(const uint16_t port) {
     // Initialize SDL_net
     if (SDLNet_Init() < 0) {
         fprintf(stderr, "ERROR: SDLNet_Init failed: %s\n", SDLNet_GetError());
-        return nullptr;
+        return NULL;
     }
 
     network_state* net = calloc(1, sizeof(network_state));
     if (!net) {
         SDLNet_Quit();
-        return nullptr;
+        return NULL;
     }
 
     // Resolve host address
     IPaddress ip;
-    if (SDLNet_ResolveHost(&ip, nullptr, port) < 0) {
+    if (SDLNet_ResolveHost(&ip, NULL, port) < 0) {
         fprintf(stderr, "ERROR: SDLNet_ResolveHost failed: %s\n", SDLNet_GetError());
         free(net);
         SDLNet_Quit();
-        return nullptr;
+        return NULL;
     }
 
     // Open server socket
@@ -40,7 +40,7 @@ network_state* network_create_host(const uint16_t port) {
         fprintf(stderr, "ERROR: SDLNet_TCP_Open failed: %s\n", SDLNet_GetError());
         free(net);
         SDLNet_Quit();
-        return nullptr;
+        return NULL;
     }
 
 
@@ -49,7 +49,7 @@ network_state* network_create_host(const uint16_t port) {
     net->socket = server;  // Store server socket (this is the listening socket)
     net->is_host = true;
     net->is_connected = false;  // Not connected yet
-    net->socket_set = nullptr;  // Will create this after accept
+    net->socket_set = NULL;  // Will create this after accept
 
     return net;  // Return immediately, connection will be completed later
 }
@@ -92,13 +92,13 @@ network_state* network_connect(const char* host, const uint16_t port) {
     // Initialize SDL_net
     if (SDLNet_Init() < 0) {
         fprintf(stderr, "ERROR: SDLNet_Init failed: %s\n", SDLNet_GetError());
-        return nullptr;
+        return NULL;
     }
 
     network_state* net = calloc(1, sizeof(network_state));
     if (!net) {
         SDLNet_Quit();
-        return nullptr;
+        return NULL;
     }
 
     // Resolve host address
@@ -108,7 +108,7 @@ network_state* network_connect(const char* host, const uint16_t port) {
                 host, port, SDLNet_GetError());
         free(net);
         SDLNet_Quit();
-        return nullptr;
+        return NULL;
     }
 
 
@@ -118,7 +118,7 @@ network_state* network_connect(const char* host, const uint16_t port) {
         fprintf(stderr, "ERROR: SDLNet_TCP_Open failed: %s\n", SDLNet_GetError());
         free(net);
         SDLNet_Quit();
-        return nullptr;
+        return NULL;
     }
 
     net->is_host = false;
@@ -131,7 +131,7 @@ network_state* network_connect(const char* host, const uint16_t port) {
         SDLNet_TCP_Close(net->socket);
         free(net);
         SDLNet_Quit();
-        return nullptr;
+        return NULL;
     }
     SDLNet_TCP_AddSocket(net->socket_set, net->socket);
 
@@ -154,7 +154,7 @@ void network_close(network_state* net) {
 }
 
 bool network_is_connected(const network_state* net) {
-    if (net == nullptr) {
+    if (net == NULL) {
         return false;
     }
 
@@ -247,13 +247,13 @@ typedef struct {
 
 session_discovery* discovery_create(const uint16_t port) {
     session_discovery* disc = calloc(1, sizeof(session_discovery));
-    if (!disc) return nullptr;
+    if (!disc) return NULL;
 
     disc->socket = SDLNet_UDP_Open(port);
     if (!disc->socket) {
         fprintf(stderr, "ERROR: Failed to open UDP socket: %s\n", SDLNet_GetError());
         free(disc);
-        return nullptr;
+        return NULL;
     }
 
     disc->packet = SDLNet_AllocPacket(sizeof(discovery_packet));
@@ -261,7 +261,7 @@ session_discovery* discovery_create(const uint16_t port) {
         fprintf(stderr, "ERROR: Failed to allocate UDP packet\n");
         SDLNet_UDP_Close(disc->socket);
         free(disc);
-        return nullptr;
+        return NULL;
     }
 
     return disc;

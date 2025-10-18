@@ -14,11 +14,11 @@ multiplayer_ui init_multiplayer_ui(const bool is_host, const int window_width, c
     ui.game_height = window_height;
 
     // Initialize enemy send buttons (positioned at bottom of left game view)
-    constexpr int button_width = 120;
-    constexpr int button_height = 40;
-    constexpr int button_spacing = 10;
+    const int button_width = 120;
+    const int button_height = 40;
+    const int button_spacing = 10;
     const int button_y = window_height - 60;
-    constexpr int start_x = 20;
+    const int start_x = 20;
 
     // Send 1 enemy ($50)
     ui.send_buttons[0] = (send_enemy_button){
@@ -74,10 +74,10 @@ void update_multiplayer_ui_dimensions(multiplayer_ui* ui, const int window_width
     ui->game_height = window_height;
 
     // Update button positions based on new window size
-    constexpr int button_width = 120;
-    constexpr int button_spacing = 10;
+    const int button_width = 120;
+    const int button_spacing = 10;
     const int button_y = window_height - 60;
-    constexpr int start_x = 20;
+    const int start_x = 20;
 
     ui->send_buttons[0].position = (vector2){start_x, button_y};
     ui->send_buttons[1].position = (vector2){start_x + button_width + button_spacing, button_y};

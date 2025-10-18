@@ -84,7 +84,7 @@ void draw_game_objects(const game* game) {
         if (obj->type == tower) {
             const sprite_info info = get_tower_sprites(obj->data.tower.level);
 
-            if (info.sprites == nullptr) {
+            if (info.sprites == NULL) {
                 continue;
             }
 
@@ -138,8 +138,8 @@ void draw_game_objects(const game* game) {
                 continue;
             }
 
-            constexpr int frame_width = 84;
-            constexpr int frame_height = 9;
+            const int frame_width = 84;
+            const int frame_height = 9;
 
             const int current_frame = obj->data.projectile.current_frame;
 
@@ -225,10 +225,10 @@ void draw_wave_info(const game* game) {
     char wave_text[64];
     snprintf(wave_text, sizeof(wave_text), "Wave %d", game->current_wave + 1);
 
-    constexpr int font_size = 30;
+    const int font_size = 30;
     const int text_width = measure_text(wave_text, font_size);
     const int x = map_width_pixels - text_width - 20;
-    constexpr int y = 60;
+    const int y = 60;
 
     draw_rectangle(x - 10, y - 5, text_width + 20, font_size + 10, (color){0, 0, 0, 180});
 
@@ -239,10 +239,10 @@ void draw_wave_info(const game* game) {
     snprintf(progress_text, sizeof(progress_text), "%d/%d enemies",
              game->enemies_spawned_in_wave, wave.enemy_count);
 
-    constexpr int progress_font_size = 18;
+    const int progress_font_size = 18;
     const int progress_width = measure_text(progress_text, progress_font_size);
     const int progress_x = map_width_pixels - progress_width - 20;
-    constexpr int progress_y = y + font_size + 10;
+    const int progress_y = y + font_size + 10;
 
     draw_text(progress_text, progress_x, progress_y, progress_font_size, (color){200, 200, 200, 255});
 }
@@ -271,7 +271,7 @@ void draw_wave_break_screen(const game* game) {
 }
 
 void draw_tower_info(const game_object* tower_object, const int x, const int y) {
-    if (tower_object == nullptr || tower_object->type != tower) {
+    if (tower_object == NULL || tower_object->type != tower) {
         return;
     }
 
@@ -283,14 +283,14 @@ void draw_tower_info(const game_object* tower_object, const int x, const int y) 
     char level_text[32];
     snprintf(level_text, sizeof(level_text), "Level %d", tower_object->data.tower.level);
 
-    constexpr int padding = 10;
-    constexpr int font_size = 20;
+    const int padding = 10;
+    const int font_size = 20;
     const int name_width = measure_text(tower_name, font_size);
     const int level_width = measure_text(level_text, font_size);
     const int max_width = name_width > level_width ? name_width : level_width;
 
     const int box_width = max_width + padding * 2;
-    constexpr int box_height = font_size * 2 + padding * 3;
+    const int box_height = font_size * 2 + padding * 3;
 
     draw_rectangle(x, y, box_width, box_height, (color){0, 0, 0, 200});
     draw_rectangle_lines(x, y, box_width, box_height, (color){100, 200, 255, 255});

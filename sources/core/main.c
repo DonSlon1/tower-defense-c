@@ -26,7 +26,7 @@ int main(void)
     menu_system menu = init_menu_system();
     bool connection_attempted = false;
     menu_state last_menu_state = menu_state_main;
-    network_state* active_network = nullptr;
+    network_state* active_network = NULL;
 
     while (!window_should_close()) {
         if (menu.current_state != last_menu_state) {
@@ -58,7 +58,7 @@ int main(void)
                 float game_sync_timer = 0.0f;
 
                 while (!window_should_close() && network_is_connected(active_network)) {
-                    constexpr float game_sync_interval = 1.0f;
+                    const float game_sync_interval = 1.0f;
                     const float delta = get_frame_time();
 
                     const int current_width = get_screen_width();
@@ -74,7 +74,7 @@ int main(void)
                         const game_object* hovered_tower = find_tower_at_grid(&local_game, grid_pos);
                         const int spot_index = find_tower_spot_at_grid(&local_game, grid_pos);
 
-                        if (hovered_tower != nullptr || spot_index >= 0) {
+                        if (hovered_tower != NULL || spot_index >= 0) {
                             use_pointer_cursor();
                         } else {
                             use_normal_cursor();
@@ -124,7 +124,7 @@ int main(void)
                             local_wave_complete = true;
 
                             // Notify opponent we're done
-                            network_message msg = network_create_message(msg_wave_complete, nullptr, 0);
+                            network_message msg = network_create_message(msg_wave_complete, NULL, 0);
                             network_send(active_network, &msg);
 
                             // Check if both players are done
@@ -382,7 +382,7 @@ int main(void)
                 unload_game(&local_game);
                 unload_game(&remote_game);
                 network_close(active_network);
-                active_network = nullptr;
+                active_network = NULL;
 
                 // Resize back to menu size
                 set_window_size(MENU_WIDTH, MENU_HEIGHT);
@@ -433,7 +433,7 @@ int main(void)
                 } else {
                     printf("ERROR: Failed to create server socket\n");
                     menu_set_connection_failed(&menu, "Failed to start server");
-                    active_network = nullptr;
+                    active_network = NULL;
                 }
             } else {
                 printf("Connecting to %s:%d...\n", ip, port);
@@ -461,7 +461,7 @@ int main(void)
                     float game_sync_timer = 0.0f;
 
                     while (!window_should_close() && network_is_connected(active_network)) {
-                        constexpr float game_sync_interval = 1.0f;
+                        const float game_sync_interval = 1.0f;
                         const float delta = get_frame_time();
 
                         const int current_width = get_screen_width();
@@ -477,7 +477,7 @@ int main(void)
                             const game_object* hovered_tower = find_tower_at_grid(&local_game, grid_pos);
                             const int spot_index = find_tower_spot_at_grid(&local_game, grid_pos);
 
-                            if (hovered_tower != nullptr || spot_index >= 0) {
+                            if (hovered_tower != NULL || spot_index >= 0) {
                                 use_pointer_cursor();
                             } else {
                                 use_normal_cursor();
@@ -527,7 +527,7 @@ int main(void)
                                 local_wave_complete = true;
 
                                 // Notify opponent we're done
-                                network_message msg = network_create_message(msg_wave_complete, nullptr, 0);
+                                network_message msg = network_create_message(msg_wave_complete, NULL, 0);
                                 network_send(active_network, &msg);
 
                                 // Check if both players are done
@@ -785,7 +785,7 @@ int main(void)
                     unload_game(&local_game);
                     unload_game(&remote_game);
                     network_close(active_network);
-                    active_network = nullptr;
+                    active_network = NULL;
 
                     // Resize back to menu size
                     set_window_size(MENU_WIDTH, MENU_HEIGHT);
@@ -793,7 +793,7 @@ int main(void)
                 } else {
                     printf("ERROR: Failed to connect to %s:%d\n", ip, port);
                     menu_set_connection_failed(&menu, "Failed to connect to host");
-                    active_network = nullptr;
+                    active_network = NULL;
                 }
             }
         }
