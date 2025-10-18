@@ -38,7 +38,9 @@ network_state* network_create_host(const uint16_t port) {
     // ReSharper disable once CppLocalVariableMayBeConst
     TCPsocket server = SDLNet_TCP_Open(&ip);
     if (!server) {
-        fprintf(stderr, "ERROR: SDLNet_TCP_Open failed: %s\n", SDLNet_GetError());
+        const char* error = SDLNet_GetError();
+        fprintf(stderr, "ERROR: Failed to bind to port %d: %s\n", port, error);
+        fprintf(stderr, "       Port may already be in use or requires elevated privileges.\n");
         free(net);
         SDLNet_Quit();
         return nullptr;

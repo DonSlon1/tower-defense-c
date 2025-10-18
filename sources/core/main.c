@@ -432,7 +432,7 @@ int main(void)
                     // The menu will continue showing "Waiting for player..."
                 } else {
                     printf("ERROR: Failed to create server socket\n");
-                    menu_set_connection_failed(&menu, "Failed to start server");
+                    menu_set_connection_failed(&menu, "Port already in use");
                     active_network = nullptr;
                 }
             } else {

@@ -358,15 +358,16 @@ static void update_host_setup(menu_system* menu) {
 static void update_host_waiting(menu_system* menu) {
     update_button(&menu->host_buttons[0]);
 
-    // Respond to discovery requests
-    if (menu->discovery) {
+    // Respond to discovery requests (only if not failed)
+    if (!menu->connection_failed && menu->discovery) {
         discovery_host_update(menu->discovery);
     }
 
-    if (menu->host_buttons[0].clicked) {
+    if (menu->host_buttons[0].clicked || (menu->connection_failed && is_key_pressed(SDLK_ESCAPE))) {
         // Cancel hosting
         menu->current_state = menu_state_multiplayer_select;
         menu->waiting_for_player = false;
+        menu->connection_failed = false;
 
         // Stop discovery
         if (menu->discovery) {
@@ -610,24 +611,30 @@ static void render_host_setup(const menu_system* menu) {
 static void render_host_waiting(const menu_system* menu) {
     draw_text("HOSTING GAME", 280, 100, 40, white);
 
-    draw_text("Waiting for player to connect...", 200, 200, 24, white);
+    if (menu->connection_failed) {
+        draw_text("Failed to start server!", 250, 200, 24, red);
+        draw_text(menu->error_message, 200, 240, 18, red);
+        draw_text("Press ESC or click Cancel to go back", 200, 280, 18, lightgray);
+    } else {
+        draw_text("Waiting for player to connect...", 200, 200, 24, white);
 
-    // Animated dots
-    const unsigned int dot_count = SDL_GetTicks() / 500 % 4;
-    char dots[8] = "";
-    for (unsigned int i = 0; i < dot_count; i++) {
-        strcat(dots, ".");
+        // Animated dots
+        const unsigned int dot_count = SDL_GetTicks() / 500 % 4;
+        char dots[8] = "";
+        for (unsigned int i = 0; i < dot_count; i++) {
+            strcat(dots, ".");
+        }
+        draw_text(dots, 560, 200, 24, white);
+
+        // Instructions
+        draw_text("Tell the other player to connect to:", 200, 260, 18, lightgray);
+        draw_text("127.0.0.1 (if testing on same PC)", 220, 290, 20, gold);
+        draw_text("OR your local IP (use 'ip addr' command)", 180, 320, 20, gold);
+
+        char port_text[64];
+        snprintf(port_text, sizeof(port_text), "Port: %d", menu->port_number);
+        draw_text(port_text, 350, 350, 20, white);
     }
-    draw_text(dots, 560, 200, 24, white);
-
-    // Instructions
-    draw_text("Tell the other player to connect to:", 200, 260, 18, lightgray);
-    draw_text("127.0.0.1 (if testing on same PC)", 220, 290, 20, gold);
-    draw_text("OR your local IP (use 'ip addr' command)", 180, 320, 20, gold);
-
-    char port_text[64];
-    snprintf(port_text, sizeof(port_text), "Port: %d", menu->port_number);
-    draw_text(port_text, 350, 350, 20, white);
 
     // Cancel button
     render_button(&menu->host_buttons[0]);
