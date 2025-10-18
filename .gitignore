@@ -176,8 +176,8 @@ projekt
 # Address Sanitizer
 *.asan
 
-# Core dumps
-core
+# Core dumps (but not sources/core/ directory!)
+/core
 core.*
 vgcore.*
 

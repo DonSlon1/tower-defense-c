@@ -9,8 +9,14 @@ find_package(SDL2_image REQUIRED)
 find_package(SDL2_ttf REQUIRED)
 find_package(SDL2_net REQUIRED)
 
-file(GLOB_RECURSE PROJECT_SOURCES CONFIGURE_DEPENDS "${CMAKE_CURRENT_LIST_DIR}/sources/*.c")
-set(PROJECT_INCLUDE "${CMAKE_CURRENT_LIST_DIR}/sources/")
+file(GLOB_RECURSE PROJECT_SOURCES CONFIGURE_DEPENDS "${CMAKE_CURRENT_LIST_DIR}/sources/**/*.c")
+set(PROJECT_INCLUDE
+    "${CMAKE_CURRENT_LIST_DIR}/sources/core"
+    "${CMAKE_CURRENT_LIST_DIR}/sources/objects"
+    "${CMAKE_CURRENT_LIST_DIR}/sources/ui"
+    "${CMAKE_CURRENT_LIST_DIR}/sources/network"
+    "${CMAKE_CURRENT_LIST_DIR}/sources/utils"
+)
 
 add_executable(${PROJECT_NAME})
 target_sources(${PROJECT_NAME} PRIVATE ${PROJECT_SOURCES})

@@ -9,26 +9,26 @@ projekt/
 │   ├── cursor/                     # Custom cursors
 │   └── fonts/                      # TTF fonts
 │
-├── sources/                         # Source code
-│   ├── Core Game
+├── sources/                         # Source code (organized by category)
+│   ├── core/                       # Core game systems
 │   │   ├── main.c                  # Entry point, main loop
 │   │   ├── game.h / game.c         # Game state, logic
 │   │   ├── game_object.h           # Game object definitions
 │   │   └── renderer.h / renderer.c # Rendering system
 │   │
-│   ├── Game Objects
+│   ├── objects/                    # Game entity implementations
 │   │   ├── enemy.h / enemy.c       # Enemy behavior
 │   │   ├── tower.h / tower.c       # Tower behavior
 │   │   ├── projectile.h / projectile.c # Projectile behavior
 │   │   └── tilemap.h / tilemap.c   # Map/tilemap system
 │   │
-│   ├── UI / Menu
+│   ├── ui/                         # User interface
 │   │   └── menu.h / menu.c         # Menu system (Phase 1 ✅)
 │   │
-│   ├── Networking
+│   ├── network/                    # Multiplayer networking
 │   │   └── network.h / network.c   # Network layer (Phase 2 ✅)
 │   │
-│   └── Utilities
+│   └── utils/                      # Utility libraries
 │       └── raylib.h / raylib.c     # Custom SDL2 raylib wrapper
 │
 ├── build/                           # Build output (generated)
@@ -40,6 +40,7 @@ projekt/
 │   ├── MULTIPLAYER_IMPLEMENTATION.md # Full implementation guide
 │   ├── NETWORK_USAGE.md            # How to use networking (Phase 2 ✅)
 │   ├── PROJECT_STRUCTURE.md        # This file
+│   ├── QUICK_START.md              # Getting started guide
 │   └── test_network.md             # Testing instructions
 │
 └── CMakeLists.txt                   # Build configuration

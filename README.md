@@ -16,6 +16,8 @@ A classic tower defense game written in C23 with SDL2, featuring custom raylib-c
 - 🖼️ Custom medieval-themed cursor
 - 🔊 Fullscreen support with dynamic scaling
 - 📊 Wave progress tracking and game statistics
+- 🌐 **Multiplayer support** with TCP networking (SDL2_net)
+- 🎨 Complete menu system with multiplayer UI
 
 ## Screenshots
 
@@ -33,20 +35,21 @@ Displays your final stats including wave reached, enemies defeated, and money ea
 - **SDL2** - Core graphics library
 - **SDL2_image** - PNG image loading
 - **SDL2_ttf** - TrueType font rendering
+- **SDL2_net** - Network communication (TCP)
 
 ### Arch Linux
 ```bash
-sudo pacman -S cmake gcc sdl2 sdl2_image sdl2_ttf
+sudo pacman -S cmake gcc sdl2 sdl2_image sdl2_ttf sdl2_net
 ```
 
 ### Ubuntu/Debian
 ```bash
-sudo apt install cmake gcc libsdl2-dev libsdl2-image-dev libsdl2-ttf-dev
+sudo apt install cmake gcc libsdl2-dev libsdl2-image-dev libsdl2-ttf-dev libsdl2-net-dev
 ```
 
 ### Fedora
 ```bash
-sudo dnf install cmake gcc SDL2-devel SDL2_image-devel SDL2_ttf-devel
+sudo dnf install cmake gcc SDL2-devel SDL2_image-devel SDL2_ttf-devel SDL2_net-devel
 ```
 
 ## Building
@@ -99,21 +102,36 @@ cmake --build build
 ```
 projekt/
 ├── sources/
-│   ├── game.c/h          - Core game logic and state management
-│   ├── enemy.c/h         - Enemy AI, pathfinding, and animations
-│   ├── tower.c/h         - Tower behavior and targeting
-│   ├── projectile.c/h    - Projectile physics and collisions
-│   ├── renderer.c/h      - All rendering and UI drawing
-│   ├── tilemap.c/h       - Map rendering and scaling
-│   ├── raylib.c/h        - SDL2-based raylib compatibility layer
-│   ├── game_object.h     - Entity definitions and data structures
-│   └── main.c            - Entry point
+│   ├── core/            # Core game systems
+│   │   ├── main.c                - Entry point, main loop
+│   │   ├── game.c/h              - Game state and logic
+│   │   ├── game_object.h         - Entity definitions
+│   │   └── renderer.c/h          - Rendering system
+│   ├── objects/         # Game entity implementations
+│   │   ├── enemy.c/h             - Enemy AI and pathfinding
+│   │   ├── tower.c/h             - Tower behavior and targeting
+│   │   ├── projectile.c/h        - Projectile physics
+│   │   └── tilemap.c/h           - Map rendering and scaling
+│   ├── ui/              # User interface
+│   │   └── menu.c/h              - Menu system and multiplayer UI
+│   ├── network/         # Multiplayer networking
+│   │   └── network.c/h           - TCP networking layer
+│   └── utils/           # Utility libraries
+│       └── raylib.c/h            - SDL2-based raylib wrapper
 ├── assets/
-│   ├── images/           - Textures and sprites
-│   └── cursor/           - Custom cursor graphics
-├── CMakeLists.txt        - Build configuration
-└── README.md             - This file
+│   ├── images/          - Textures and sprites
+│   ├── cursor/          - Custom cursor graphics
+│   └── fonts/           - TrueType fonts
+├── Documentation/
+│   ├── MULTIPLAYER_IMPLEMENTATION.md  - Full multiplayer guide
+│   ├── NETWORK_USAGE.md               - Networking API docs
+│   ├── PROJECT_STRUCTURE.md           - Detailed structure guide
+│   └── QUICK_START.md                 - Getting started
+├── CMakeLists.txt       - Build configuration
+└── README.md            - This file
 ```
+
+See [PROJECT_STRUCTURE.md](PROJECT_STRUCTURE.md) for detailed file responsibilities and implementation status.
 
 ## Technical Details
 
@@ -165,6 +183,7 @@ This project implements a custom raylib-compatible API using SDL2, allowing the 
 - [SDL2](https://www.libsdl.org/) - Simple DirectMedia Layer
 - [SDL2_image](https://github.com/libsdl-org/SDL_image) - Image loading
 - [SDL2_ttf](https://github.com/libsdl-org/SDL_ttf) - Font rendering
+- [SDL2_net](https://github.com/libsdl-org/SDL_net) - Network communication
 
 ## License
 
@@ -173,6 +192,17 @@ This project is open source and available under the MIT License.
 ## Contributing
 
 Contributions are welcome! Please feel free to submit issues and pull requests.
+
+### Multiplayer Implementation Progress
+- [x] Menu system with host/join UI
+- [x] TCP networking layer (SDL2_net)
+- [x] Basic connection establishment
+- [ ] Protocol message handling
+- [ ] Game state synchronization
+- [ ] Enemy sending system
+- [ ] Split-screen rendering
+
+See [MULTIPLAYER_IMPLEMENTATION.md](MULTIPLAYER_IMPLEMENTATION.md) for full roadmap.
 
 ### TODO
 - [ ] Add sound effects and music
