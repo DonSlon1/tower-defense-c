@@ -224,3 +224,148 @@ network_message network_create_message(const message_type type, const void* data
 
     return msg;
 }
+
+// Session discovery implementation
+
+#define DISCOVERY_PORT 47777
+#define DISCOVERY_MAGIC 0x54445344  // "TDSD" = Tower Defense Session Discovery
+
+struct session_discovery {
+    UDPsocket socket;
+    UDPpacket* packet;
+    bool is_host;
+    char host_name[64];
+    uint16_t game_port;
+};
+
+typedef struct {
+    uint32_t magic;
+    uint8_t message_type;  // 0 = request, 1 = response
+    char host_name[64];
+    uint16_t game_port;
+} __attribute__((packed)) discovery_packet;
+
+session_discovery* discovery_create(const uint16_t port) {
+    session_discovery* disc = calloc(1, sizeof(session_discovery));
+    if (!disc) return nullptr;
+
+    disc->socket = SDLNet_UDP_Open(port);
+    if (!disc->socket) {
+        fprintf(stderr, "ERROR: Failed to open UDP socket: %s\n", SDLNet_GetError());
+        free(disc);
+        return nullptr;
+    }
+
+    disc->packet = SDLNet_AllocPacket(sizeof(discovery_packet));
+    if (!disc->packet) {
+        fprintf(stderr, "ERROR: Failed to allocate UDP packet\n");
+        SDLNet_UDP_Close(disc->socket);
+        free(disc);
+        return nullptr;
+    }
+
+    return disc;
+}
+
+void discovery_close(session_discovery* disc) {
+    if (!disc) return;
+    if (disc->packet) SDLNet_FreePacket(disc->packet);
+    if (disc->socket) SDLNet_UDP_Close(disc->socket);
+    free(disc);
+}
+
+void discovery_start_host(session_discovery* disc, const char* host_name, const uint16_t game_port) {
+    if (!disc || !host_name) return;
+
+    disc->is_host = true;
+    strncpy(disc->host_name, host_name, sizeof(disc->host_name) - 1);
+    disc->host_name[sizeof(disc->host_name) - 1] = '\0';
+    disc->game_port = game_port;
+}
+
+void discovery_host_update(session_discovery* disc) {
+    if (!disc || !disc->is_host) return;
+
+    // Check for discovery requests (non-blocking)
+    if (SDLNet_UDP_Recv(disc->socket, disc->packet) > 0) {
+        if (disc->packet->len == sizeof(discovery_packet)) {
+            const discovery_packet* request = (const discovery_packet*)disc->packet->data;
+
+            // Check if this is a valid discovery request
+            if (request->magic == DISCOVERY_MAGIC && request->message_type == 0) {
+                // Send response back to requester
+                discovery_packet response = {
+                    .magic = DISCOVERY_MAGIC,
+                    .message_type = 1,
+                    .game_port = disc->game_port
+                };
+
+                strncpy(response.host_name, disc->host_name, sizeof(response.host_name) - 1);
+                response.host_name[sizeof(response.host_name) - 1] = '\0';
+
+                // Send directly to requester
+                disc->packet->len = sizeof(discovery_packet);
+                memcpy(disc->packet->data, &response, sizeof(discovery_packet));
+                SDLNet_UDP_Send(disc->socket, -1, disc->packet);
+            }
+        }
+    }
+}
+
+int discovery_find_sessions(session_discovery* disc, discovered_session* sessions, const int max_sessions, const float timeout_seconds) {
+    if (!disc || !sessions || max_sessions <= 0) return 0;
+
+    // Send broadcast request
+    discovery_packet request = {
+        .magic = DISCOVERY_MAGIC,
+        .message_type = 0,  // Request
+        .host_name = "",
+        .game_port = 0
+    };
+
+    IPaddress broadcast_addr;
+    SDLNet_ResolveHost(&broadcast_addr, "255.255.255.255", DISCOVERY_PORT);
+
+    disc->packet->address = broadcast_addr;
+    disc->packet->len = sizeof(discovery_packet);
+    memcpy(disc->packet->data, &request, sizeof(discovery_packet));
+
+    SDLNet_UDP_Send(disc->socket, -1, disc->packet);
+
+    // Listen for responses
+    const Uint32 start_time = SDL_GetTicks();
+    const Uint32 timeout_ms = (Uint32)(timeout_seconds * 1000.0f);
+    int session_count = 0;
+
+    while (SDL_GetTicks() - start_time < timeout_ms && session_count < max_sessions) {
+        if (SDLNet_UDP_Recv(disc->socket, disc->packet) > 0) {
+            if (disc->packet->len == sizeof(discovery_packet)) {
+                discovery_packet* response = (discovery_packet*)disc->packet->data;
+
+                // Verify magic number and response type
+                if (response->magic == DISCOVERY_MAGIC && response->message_type == 1) {
+                    // Convert IP to string
+                    const Uint32 ip = SDL_SwapBE32(disc->packet->address.host);
+                    snprintf(sessions[session_count].ip_address,
+                            sizeof(sessions[session_count].ip_address),
+                            "%u.%u.%u.%u",
+                            (ip >> 24) & 0xFF,
+                            (ip >> 16) & 0xFF,
+                            (ip >> 8) & 0xFF,
+                            ip & 0xFF);
+
+                    strncpy(sessions[session_count].host_name, response->host_name,
+                           sizeof(sessions[session_count].host_name) - 1);
+                    sessions[session_count].host_name[sizeof(sessions[session_count].host_name) - 1] = '\0';
+                    sessions[session_count].port = response->game_port;
+
+                    session_count++;
+                }
+            }
+        }
+
+        SDL_Delay(10);
+    }
+
+    return session_count;
+}

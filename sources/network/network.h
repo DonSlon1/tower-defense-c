@@ -17,6 +17,8 @@ typedef enum {
     MSG_WAVE_START,            // Both players ready - start next wave
     MSG_GAME_SYNC,             // Sync game state
     MSG_DISCONNECT,            // Player leaving
+    MSG_DISCOVER_REQUEST,      // Broadcast to find sessions
+    MSG_DISCOVER_RESPONSE,     // Response from a host with session info
 } message_type;
 
 // Network message structure
@@ -43,5 +45,27 @@ bool network_receive(network_state* net, network_message* out_msg);
 
 // Helper to create messages
 network_message network_create_message(message_type type, const void* data, uint16_t data_size);
+
+// Session discovery
+typedef struct {
+    char host_name[64];
+    char ip_address[16];
+    uint16_t port;
+} discovered_session;
+
+typedef struct session_discovery session_discovery;
+
+// Create a discovery service for broadcasting/listening for sessions
+session_discovery* discovery_create(uint16_t port);
+void discovery_close(session_discovery* disc);
+
+// Host: Start listening for discovery requests and auto-respond
+void discovery_start_host(session_discovery* disc, const char* host_name, uint16_t game_port);
+
+// Host: Check for and respond to discovery requests (non-blocking, call in main loop)
+void discovery_host_update(session_discovery* disc);
+
+// Client: Find available sessions on local network
+int discovery_find_sessions(session_discovery* disc, discovered_session* sessions, int max_sessions, float timeout_seconds);
 
 #endif
