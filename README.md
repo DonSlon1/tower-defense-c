@@ -196,13 +196,15 @@ Contributions are welcome! Please feel free to submit issues and pull requests.
 ### Multiplayer Implementation Progress
 - [x] Menu system with host/join UI
 - [x] TCP networking layer (SDL2_net)
-- [x] Basic connection establishment
-- [ ] Protocol message handling
-- [ ] Game state synchronization
-- [ ] Enemy sending system
-- [ ] Split-screen rendering
+- [x] Session discovery via UDP broadcast
+- [x] Connection establishment with error handling
+- [x] Port binding validation
+- [x] Protocol message handling
+- [x] Game state synchronization
+- [x] Enemy sending system
+- [x] Split-screen rendering
 
-See [MULTIPLAYER_IMPLEMENTATION.md](MULTIPLAYER_IMPLEMENTATION.md) for full roadmap.
+Multiplayer is fully functional! See [MULTIPLAYER_IMPLEMENTATION.md](MULTIPLAYER_IMPLEMENTATION.md) for details.
 
 ### TODO
 - [ ] Add sound effects and music
