@@ -324,10 +324,16 @@ static void update_host_setup(menu_system* menu) {
     if (menu->host_setup_buttons[0].clicked) {
         // Start Hosting
         stop_text_input();
-        menu->port_number = atoi(menu->port_input);
-        if (menu->port_number <= 0 || menu->port_number > 65535) {
+
+        // Parse port number with error checking
+        char* endptr;
+        const long port_long = strtol(menu->port_input, &endptr, 10);
+        if (*endptr != '\0' || port_long <= 0 || port_long > 65535) {
+            // Invalid port, use default
             menu->port_number = 7777;
             strcpy(menu->port_input, "7777");
+        } else {
+            menu->port_number = (int)port_long;
         }
 
         menu->waiting_for_player = true;
