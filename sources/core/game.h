@@ -5,17 +5,33 @@
 #ifndef PROJEKT_GAME_H
 #define PROJEKT_GAME_H
 #include <stddef.h>
+#include <assert.h>
 
 #include "tilemap.h"
 #include "game_object.h"
 
+// Game object limits
 #define STARTING_COUNT_OF_GAME_OBJECTS 32
+#define MAX_GAME_OBJECTS 8192
+
+// Compile-time validation of game object limits
+static_assert(MAX_GAME_OBJECTS >= STARTING_COUNT_OF_GAME_OBJECTS,
+              "MAX_GAME_OBJECTS must be >= STARTING_COUNT_OF_GAME_OBJECTS");
+static_assert(MAX_GAME_OBJECTS <= 100000,
+              "MAX_GAME_OBJECTS too large - potential memory issue");
+
+// Economy constants
 #define STARTING_AMOUNT_OF_MONEY 250
 #define STARTING_AMOUNT_OF_LIVES 100
 #define TOWER_BUILD_COST 100
 
+// Wave configuration
 #define MAX_WAVES 10
 #define WAVE_BREAK_DURATION 10.0f
+
+// Safety validation macros
+#define VALIDATE_PTR(ptr) if (!(ptr)) return
+#define VALIDATE_PTR_RET(ptr, ret) if (!(ptr)) return (ret)
 
 typedef struct {
     int enemy_count;
@@ -30,6 +46,14 @@ typedef enum {
     game_state_wave_break,
     game_state_game_over
 } game_state;
+
+typedef enum {
+    result_ok,
+    result_error_null_ptr,
+    result_error_out_of_bounds,
+    result_error_out_of_memory,
+    result_error_invalid_state
+} result_code;
 
 typedef struct {
     texture_2d towers;
@@ -74,8 +98,8 @@ typedef struct game {
 } game;
 
 game init_game();
-void add_game_object(game *g, game_object obj);
-void grow_object_capacity(game *g);
+result_code add_game_object(game *g, game_object obj);
+result_code grow_object_capacity(game *g);
 void start_game(game *g);
 void unload_game(game *g);
 grid_coord screen_to_grid(vector2 screen_pos, const tile_map* tilemap);

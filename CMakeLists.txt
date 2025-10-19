@@ -84,6 +84,7 @@ target_compile_options(${PROJECT_NAME} PRIVATE
     $<$<C_COMPILER_ID:Clang>:-Wno-disabled-macro-expansion>
     $<$<C_COMPILER_ID:Clang>:-Wno-c++98-compat>
     $<$<C_COMPILER_ID:Clang>:-Wno-pre-c23-compat>
+    $<$<C_COMPILER_ID:Clang>:-Wno-pre-c11-compat>
     $<$<C_COMPILER_ID:Clang>:-Wno-covered-switch-default>
     $<$<C_COMPILER_ID:Clang>:-Wno-unreachable-code-break>
     $<$<C_COMPILER_ID:Clang>:-Wno-unreachable-code>
@@ -98,7 +99,7 @@ target_compile_options(${PROJECT_NAME} PRIVATE
     # Disable specific warnings we handle differently
     -Wno-unused-variable        # Allow unused variables
     -Wno-sign-conversion        # Too noisy for practical use
-    -Wno-old-style-declaration  # Allow 'const auto' instead of 'auto const'
+    $<$<C_COMPILER_ID:GNU>:-Wno-old-style-declaration>  # Allow 'const auto' instead of 'auto const' (GCC only)
 
     # Build type specific flags
     $<$<CONFIG:Debug>:-O0>

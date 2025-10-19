@@ -3,6 +3,9 @@
 
 #include <stdint.h>
 
+// Protocol version for compatibility checking
+#define NETWORK_PROTOCOL_VERSION 1
+
 // Maximum message size
 #define MAX_MESSAGE_SIZE 512
 
@@ -22,10 +25,11 @@ typedef enum {
 
 // Network message structure
 typedef struct {
+    uint8_t protocol_version;  // Protocol version (NETWORK_PROTOCOL_VERSION)
     message_type type;         // What kind of message
     uint32_t timestamp;        // When it was sent (SDL_GetTicks())
     uint16_t data_size;        // How much data in payload
-    uint8_t data[MAX_MESSAGE_SIZE - 8]; // Payload (512 - 8 bytes overhead = 504 bytes)
+    uint8_t data[MAX_MESSAGE_SIZE - 12]; // Payload (512 - 12 bytes overhead = 500 bytes)
 } __attribute__((packed)) network_message;
 
 // Network state (opaque)

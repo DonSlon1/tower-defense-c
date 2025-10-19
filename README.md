@@ -167,10 +167,25 @@ This project implements a custom raylib-compatible API using SDL2, allowing the 
 - No comments in code (self-documenting)
 - Clear error handling and logging
 
+### Code Quality
+- **Zero warnings** with `-Werror` on both GCC and Clang
+- 40+ enabled warning flags for comprehensive error checking
+- Memory safety: bounds checking, null pointer validation
+- Protocol versioning for network compatibility
+- Static assertions for compile-time validation
+- Consistent `result_code` error handling pattern
+- VALIDATE_PTR macros for defensive programming
+
+### Compiler Support
+- **GCC 13+**: Full support with GCC-specific optimizations
+- **Clang 16+**: Full support with Clang's comprehensive warnings
+- Both compilers build with zero warnings/errors using `-Werror`
+
 ### Memory Management
 - Manual memory management with proper cleanup
 - Static allocation where possible
 - Address sanitizer enabled in debug builds
+- Bounded allocations with MAX_GAME_OBJECTS limit (8192)
 
 ## Credits
 

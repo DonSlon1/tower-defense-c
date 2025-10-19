@@ -85,7 +85,7 @@ void spawn_enemy(game *g) {
 
     const vector2 start_pos = get_path_start_position(chosen_path);
 
-    add_game_object(g, (game_object) {
+    const result_code res = add_game_object(g, (game_object) {
         .type = enemy,
         .position = start_pos,
         .is_active = true,
@@ -102,6 +102,11 @@ void spawn_enemy(game *g) {
             .frame_timer = 0.0f
         }
     });
+
+    if (res != result_ok) {
+        fprintf(stderr, "ERROR: Failed to spawn enemy: code %u\n", (unsigned)res);
+        return;
+    }
 
     g->enemies_spawned_in_wave++;
     g->enemies_alive++;
@@ -211,45 +216,68 @@ game init_game() {
         exit(1);
     }
 
-    add_game_object(&g, init_tower(g.tower_spots[0].position));
+    const result_code res = add_game_object(&g, init_tower(g.tower_spots[0].position));
+    if (res != result_ok) {
+        fprintf(stderr, "ERROR: Failed to add initial tower: code %u\n", (unsigned)res);
+        free(g.game_objects);
+        unload_tilemap(&g.tilemap);
+        exit(1);
+    }
     g.tower_spots[0].occupied = true;
 
     return g;
 }
 
-void add_game_object(game *g, game_object obj) {
-    if (g == nullptr || g->game_objects == nullptr) return;
+result_code add_game_object(game *g, game_object obj) {
+    VALIDATE_PTR_RET(g, result_error_null_ptr);
+    VALIDATE_PTR_RET(g->game_objects, result_error_null_ptr);
+
+    if (g->object_count >= MAX_GAME_OBJECTS) {
+        fprintf(stderr, "ERROR: Cannot add object - MAX_GAME_OBJECTS (%zu) limit reached\n", (size_t)MAX_GAME_OBJECTS);
+        return result_error_out_of_bounds;
+    }
 
     if (g->object_count == g->object_capacity) {
-        grow_object_capacity(g);
+        const result_code res = grow_object_capacity(g);
+        if (res != result_ok) {
+            return res;
+        }
     }
 
     obj.id = g->next_id;
     g->game_objects[g->object_count] = obj;
     g->object_count++;
     g->next_id++;
+
+    return result_ok;
 }
 
-void grow_object_capacity(game* g) {
-    if (g == nullptr) return;
+result_code grow_object_capacity(game* g) {
+    VALIDATE_PTR_RET(g, result_error_null_ptr);
 
     size_t new_capacity = g->object_capacity * 2;
     if (new_capacity == 0) new_capacity = STARTING_COUNT_OF_GAME_OBJECTS;
 
-    if (new_capacity < g->object_capacity) {
-        fprintf(stderr, "ERROR: Capacity overflow when resizing game objects array.\n");
-        exit(1);
+    if (new_capacity > MAX_GAME_OBJECTS) {
+        new_capacity = MAX_GAME_OBJECTS;
+    }
+
+    if (new_capacity <= g->object_capacity) {
+        fprintf(stderr, "ERROR: Cannot grow capacity beyond MAX_GAME_OBJECTS (%zu)\n", (size_t)MAX_GAME_OBJECTS);
+        return result_error_out_of_bounds;
     }
 
     game_object* temp = realloc(g->game_objects, sizeof(game_object) * new_capacity);
 
     if (temp == nullptr) {
         fprintf(stderr, "ERROR: Failed to reallocate memory for game objects.\n");
-        exit(1);
+        return result_error_out_of_memory;
     }
 
     g->game_objects = temp;
     g->object_capacity = new_capacity;
+
+    return result_ok;
 }
 
 void start_game(game *g) {
@@ -471,7 +499,12 @@ bool try_build_tower(game *g, const int spot_index) {
     }
 
     g->player_money -= TOWER_BUILD_COST;
-    add_game_object(g, init_tower(spot->position));
+    const result_code res = add_game_object(g, init_tower(spot->position));
+    if (res != result_ok) {
+        fprintf(stderr, "ERROR: Failed to build tower: code %u\n", (unsigned)res);
+        g->player_money += TOWER_BUILD_COST;
+        return false;
+    }
     spot->occupied = true;
 
     return true;

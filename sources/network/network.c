@@ -1,4 +1,5 @@
 #include "network.h"
+#include "../core/game.h"
 #include <SDL2/SDL_net.h>
 #include <SDL2/SDL.h>
 #include <stdio.h>
@@ -59,7 +60,9 @@ network_state* network_create_host(const uint16_t port) {
 
 // Non-blocking check for client connection (for host)
 bool network_host_check_for_client(network_state* net) {
-    if (!net || !net->is_host || net->is_connected) {
+    VALIDATE_PTR_RET(net, false);
+
+    if (!net->is_host || net->is_connected) {
         return false;  // Not a host or already connected
     }
 
@@ -144,7 +147,7 @@ network_state* network_connect(const char* host, const uint16_t port) {
 }
 
 void network_close(network_state* net) {
-    if (!net) return;
+    VALIDATE_PTR(net);
 
     if (net->socket_set) {
         SDLNet_FreeSocketSet(net->socket_set);
@@ -159,16 +162,17 @@ void network_close(network_state* net) {
 }
 
 bool network_is_connected(const network_state* net) {
-    if (net == nullptr) {
-        return false;
-    }
+    VALIDATE_PTR_RET(net, false);
 
     return net->is_connected;
 }
 
 // Send a message (blocking)
 bool network_send(network_state* net, const network_message* msg) {
-    if (!net || !net->is_connected || !msg) {
+    VALIDATE_PTR_RET(net, false);
+    VALIDATE_PTR_RET(msg, false);
+
+    if (!net->is_connected) {
         return false;
     }
 
@@ -185,7 +189,10 @@ bool network_send(network_state* net, const network_message* msg) {
 
 // Receive a message (non-blocking)
 bool network_receive(network_state* net, network_message* out_msg) {
-    if (!net || !net->is_connected || !out_msg) {
+    VALIDATE_PTR_RET(net, false);
+    VALIDATE_PTR_RET(out_msg, false);
+
+    if (!net->is_connected) {
         return false;
     }
 
@@ -213,12 +220,20 @@ bool network_receive(network_state* net, network_message* out_msg) {
         return false;
     }
 
+    // Validate protocol version
+    if (out_msg->protocol_version != NETWORK_PROTOCOL_VERSION) {
+        fprintf(stderr, "ERROR: Protocol version mismatch (received %d, expected %d)\n",
+                out_msg->protocol_version, NETWORK_PROTOCOL_VERSION);
+        return false;
+    }
+
     return true;
 }
 
 // Helper to create a message
 network_message network_create_message(const message_type type, const void* data, const uint16_t data_size) {
     network_message msg = {0};
+    msg.protocol_version = NETWORK_PROTOCOL_VERSION;
     msg.type = type;
     msg.timestamp = SDL_GetTicks();
     msg.data_size = data_size;
@@ -273,14 +288,15 @@ session_discovery* discovery_create(const uint16_t port) {
 }
 
 void discovery_close(session_discovery* disc) {
-    if (!disc) return;
+    VALIDATE_PTR(disc);
     if (disc->packet) SDLNet_FreePacket(disc->packet);
     if (disc->socket) SDLNet_UDP_Close(disc->socket);
     free(disc);
 }
 
 void discovery_start_host(session_discovery* disc, const char* host_name, const uint16_t game_port) {
-    if (!disc || !host_name) return;
+    VALIDATE_PTR(disc);
+    VALIDATE_PTR(host_name);
 
     disc->is_host = true;
     strncpy(disc->host_name, host_name, sizeof(disc->host_name) - 1);
@@ -289,7 +305,8 @@ void discovery_start_host(session_discovery* disc, const char* host_name, const 
 }
 
 void discovery_host_update(session_discovery* disc) {
-    if (!disc || !disc->is_host) return;
+    VALIDATE_PTR(disc);
+    if (!disc->is_host) return;
 
     // Check for discovery requests (non-blocking)
     if (SDLNet_UDP_Recv(disc->socket, disc->packet) > 0) {
@@ -317,7 +334,9 @@ void discovery_host_update(session_discovery* disc) {
 }
 
 int discovery_find_sessions(session_discovery* disc, discovered_session* sessions, const int max_sessions, const float timeout_seconds) {
-    if (!disc || !sessions || max_sessions <= 0) return 0;
+    VALIDATE_PTR_RET(disc, 0);
+    VALIDATE_PTR_RET(sessions, 0);
+    if (max_sessions <= 0) return 0;
 
     // Send broadcast request
     const discovery_packet request = {

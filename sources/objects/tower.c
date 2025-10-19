@@ -176,7 +176,11 @@ void update_tower(game *g, game_object *twr, const float delta_time) {
                     target_id
                 );
 
-                add_game_object(g, proj);
+                const result_code res = add_game_object(g, proj);
+                if (res != result_ok) {
+                    fprintf(stderr, "ERROR: Failed to add projectile: code %u\n", (unsigned)res);
+                    return;
+                }
 
                 twr->data.tower.fire_cooldown = TOWER_LEVEL_1_FIRE_COOLDOWN;
                 break;

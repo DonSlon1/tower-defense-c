@@ -133,7 +133,8 @@ bool window_should_close(void) {
     }
 
     const Uint64 current_time = SDL_GetPerformanceCounter();
-    delta_time = (float)(current_time - last_time) / (float)SDL_GetPerformanceFrequency();
+    const Uint64 frequency = SDL_GetPerformanceFrequency();
+    delta_time = (float)(current_time - last_time) / (float)frequency;
     last_time = current_time;
 
     return false;
@@ -238,7 +239,7 @@ void draw_texture_pro(const texture_2d texture, const rectangle source, const re
 
     const SDL_Point center = {(int)origin.x, (int)origin.y};
 
-    if (SDL_RenderCopyEx(renderer, sdl_texture, &src_rect, &dst_rect, rotation, &center, SDL_FLIP_NONE) < 0) {
+    if (SDL_RenderCopyEx(renderer, sdl_texture, &src_rect, &dst_rect, (double)rotation, &center, SDL_FLIP_NONE) < 0) {
         fprintf(stderr, "ERROR: SDL_RenderCopyEx failed: %s\n", SDL_GetError());
     }
 }
